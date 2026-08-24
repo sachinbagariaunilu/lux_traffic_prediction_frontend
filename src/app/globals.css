@@ -1,8 +1,68 @@
 @import "tailwindcss";
 
+/*
+ * Data-viz tokens. Both modes are selected -- the dark column is the same hues
+ * re-stepped for the dark surface, not an automatic flip. Palette validated
+ * all-pairs in both modes (worst CVD dE 9.8 light / 11.3 dark, contrast >= 3:1).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --viz-surface: #fcfcfb;   /* card / chart surface */
+  --viz-plane: #f9f9f7;     /* page behind the cards */
+  --viz-ink: #0b0b0b;
+  --viz-ink-2: #52514e;
+  --viz-muted: #898781;     /* axis + labels */
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  --viz-border: rgba(11, 11, 11, 0.1);
+
+  --viz-series: #2a78d6;    /* slot 1 -- predicted */
+  --viz-actual: #eb6834;    /* slot 2 -- recorded truth */
+  --viz-baseline: #898781;  /* context, always dashed */
+
+  /* Status is fixed, never themed, and never reused as a series colour. */
+  --status-warn: #fab219;
+  --status-bad: #d03b3b;
+
+  --background: var(--viz-plane);
+  --foreground: var(--viz-ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --viz-surface: #1a1a19;
+    --viz-plane: #0d0d0d;
+    --viz-ink: #ffffff;
+    --viz-ink-2: #c3c2b7;
+    --viz-muted: #898781;
+    --viz-grid: #2c2c2a;
+    --viz-axis: #383835;
+    --viz-border: rgba(255, 255, 255, 0.1);
+
+    --viz-series: #3987e5;
+    --viz-actual: #d95926;
+    --viz-baseline: #898781;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --viz-surface: #1a1a19;
+  --viz-plane: #0d0d0d;
+  --viz-ink: #ffffff;
+  --viz-ink-2: #c3c2b7;
+  --viz-muted: #898781;
+  --viz-grid: #2c2c2a;
+  --viz-axis: #383835;
+  --viz-border: rgba(255, 255, 255, 0.1);
+
+  --viz-series: #3987e5;
+  --viz-actual: #d95926;
+  --viz-baseline: #898781;
 }
 
 @theme inline {
@@ -12,15 +72,316 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: var(--viz-plane);
+  color: var(--viz-ink);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Anything clickable gets the hand. Tailwind's reset sets buttons to
+   cursor:default, which makes a styled UI feel inert. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary,
+label:has(> input[type="checkbox"]),
+select:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes riseIn {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Children fade up in sequence -- makes a report feel composed, not dumped. */
+.stagger > * {
+  animation: riseIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger > *:nth-child(3) { animation-delay: 0.1s; }
+.stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.stagger > *:nth-child(5) { animation-delay: 0.18s; }
+.stagger > *:nth-child(6) { animation-delay: 0.22s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > *,
+  [class*="animate-"] {
+    animation: none !important;
+  }
+}
+
+/* Frosted panels over the map. Kept close to opaque on purpose: map tiles are
+   busy and high-contrast, and anything thinner made the text underneath hard to
+   read. The blur is what sells the effect, not the transparency. */
+.glass {
+  background: color-mix(in srgb, var(--viz-surface) 94%, transparent);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+}
+
+.glass-strong {
+  background: color-mix(in srgb, var(--viz-surface) 98%, transparent);
+  backdrop-filter: blur(30px) saturate(1.7);
+  -webkit-backdrop-filter: blur(30px) saturate(1.7);
+}
+
+/* Browsers without backdrop-filter would otherwise get a see-through card. */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass,
+  .glass-strong {
+    background: var(--viz-surface);
+  }
+}
+
+/* A hairline that reads as depth rather than as a drawn box. */
+.ring-hairline {
+  box-shadow:
+    0 0 0 1px var(--viz-border),
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 8px 24px -12px rgb(0 0 0 / 0.14);
+}
+
+.ring-hairline-lg {
+  box-shadow:
+    0 0 0 1px var(--viz-border),
+    0 2px 6px rgb(0 0 0 / 0.05),
+    0 24px 60px -20px rgb(0 0 0 / 0.28);
+}
+
+/* Brand mark / accent sweep, built from the validated series hues. */
+.accent-sweep {
+  background: linear-gradient(
+    100deg,
+    var(--viz-series) 0%,
+    color-mix(in srgb, var(--viz-series) 55%, var(--viz-actual)) 55%,
+    var(--viz-actual) 100%
+  );
+}
+
+.text-sweep {
+  background: linear-gradient(
+    100deg,
+    var(--viz-ink) 0%,
+    color-mix(in srgb, var(--viz-ink) 72%, var(--viz-series)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Slim scrollbars so the sidebar does not grow a chunky native gutter. */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--viz-axis) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--viz-axis);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Segmented control -- replaces native selects, which never look designed. */
+.segment {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--viz-ink) 6%, transparent);
+}
+
+.segment button {
+  flex: 1;
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--viz-ink-2);
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.segment button:hover:not([data-on="true"]) {
+  color: var(--viz-ink);
+  background: color-mix(in srgb, var(--viz-ink) 4%, transparent);
+}
+
+.segment button[data-on="true"] {
+  background: var(--viz-surface);
+  color: var(--viz-ink);
+  box-shadow:
+    0 0 0 1px var(--viz-border),
+    0 1px 3px rgb(0 0 0 / 0.1);
+}
+
+/* Leaflet ships its own light-only chrome; bring it onto the tokens. */
+.leaflet-container {
+  font-family: inherit;
+  background: var(--viz-plane);
+}
+
+.leaflet-tooltip {
+  background: var(--viz-surface);
+  color: var(--viz-ink);
+  border: 1px solid var(--viz-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
+  padding: 6px 9px;
+}
+
+.leaflet-tooltip-top::before {
+  border-top-color: var(--viz-border);
+}
+
+.leaflet-control-attribution {
+  background: color-mix(in srgb, var(--viz-surface) 88%, transparent) !important;
+  color: var(--viz-muted) !important;
+  font-size: 10px;
+}
+
+.leaflet-control-attribution a {
+  color: var(--viz-ink-2) !important;
+}
+
+/* Zoom buttons -- moved to top-right, restyled off leaflet's 1990s chrome. */
+.leaflet-bar {
+  border: none !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px var(--viz-border),
+    0 2px 10px rgb(0 0 0 / 0.12) !important;
+}
+
+.leaflet-bar a {
+  background: color-mix(in srgb, var(--viz-surface) 94%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: var(--viz-ink);
+  border-bottom-color: var(--viz-grid);
+  width: 32px;
+  height: 32px;
+  line-height: 30px;
+  font-size: 17px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+
+.leaflet-bar a:hover {
+  background: var(--viz-surface);
+  color: var(--viz-series);
+}
+
+.leaflet-top.leaflet-right {
+  margin: 8px 8px 0 0;
+}
+
+/* Cluster bubbles. leaflet.markercluster ships its own beige default skin --
+   these rules replace it entirely so clusters match the rest of the palette. */
+.counter-cluster {
+  /* Leaflet sets width/height inline from iconSize; box-sizing keeps the ring
+     from pushing the digits off-centre, and the inner span does the centring
+     so no stray text-node alignment can shift it left. */
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--viz-series) 90%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--viz-series) 20%, transparent),
+    0 2px 10px rgb(0 0 0 / 0.22);
+  transition: transform 0.16s ease;
+  cursor: pointer;
+}
+
+.counter-cluster span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.counter-cluster:hover {
+  transform: scale(1.07);
+}
+
+/* Kill the library's default marker-cluster skin. */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large,
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background: transparent !important;
+}
+
+/* Pins: grow slightly under the cursor so the map feels responsive. */
+.counter-pin {
+  cursor: pointer;
+  transition:
+    fill-opacity 0.18s ease,
+    stroke-width 0.18s ease;
+}
+
+.counter-pin:hover {
+  fill-opacity: 0.95;
+  stroke-width: 3;
+}
+
+.counter-pin.is-selected {
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--viz-actual) 65%, transparent));
+}
+
+/* Dark mode ships map tiles that would otherwise glare white. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
+  }
+}
+
+:root[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
 }

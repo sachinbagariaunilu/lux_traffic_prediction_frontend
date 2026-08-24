@@ -79,6 +79,32 @@ python scripts/build_actuals.py \
 `public/actuals/` is gitignored — it is derived data, rebuild it rather than
 commit it.
 
+## Data source
+
+Traffic counts come from **[PCH : Comptage Trafic](https://data.public.lu/en/datasets/pch-comptage-trafic/)**
+on data.public.lu — the open dataset of Luxembourg's *permanent* traffic counting
+stations (which is what the `POSTE_ID` column identifies).
+
+| | |
+|---|---|
+| Publisher | Administration des Ponts et Chaussées |
+| Licence | Creative Commons Zero (CC0) |
+| Files used | 2024 and 2025 annual exports |
+
+### Scale, measured
+
+| | |
+|---|---|
+| 2024 CSV rows (all vehicle codes) | 869,229 |
+| Rows for the 1,058 modelled series | 370,818 |
+| **Hourly readings used for training** | **8,899,632** |
+| Distinct days covered in 2024 | 365 |
+| Recorded days shipped for comparison (2024+2025) | 733,562 |
+| Hourly readings shipped | 17,605,488 |
+
+The 370,818 figure cross-checks exactly against `sum(days_reported)` in the model
+bundle's `meta` table, so the training volume is verified rather than estimated.
+
 ## Coordinates
 
 `/counters` returns `coord_x` / `coord_y` in **LUREF (EPSG:2169) metres**, not

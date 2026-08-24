@@ -1,229 +1,517 @@
-"use client";
+import Image from "next/image";
+import Link from "next/link";
+import CountUp from "@/components/landing/CountUp";
+import CounterConstellation from "@/components/landing/CounterConstellation";
+import Reveal from "@/components/landing/Reveal";
+import RhythmCurve from "@/components/landing/RhythmCurve";
+import { RHYTHM } from "@/lib/landing-data";
 
-import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
-import ForecastPanel from "@/components/ForecastPanel";
-import { fetchSites } from "@/lib/api";
-import type { CounterSite } from "@/lib/types";
+/**
+ * Overview page. Every figure is measured from the shipped model bundle and the
+ * extracted counts -- see README for how each was derived. The two graphics are
+ * the real dataset drawing itself, not illustrations of it.
+ */
 
-// Leaflet reaches for `window` at import time, so it must never render on the server.
-const MapView = dynamic(() => import("@/components/MapView"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-full items-center justify-center">
-      <div className="flex items-center gap-3 text-sm text-[var(--viz-muted)]">
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--viz-axis)] border-t-[var(--viz-series)]" />
-        Loading map…
-      </div>
-    </div>
-  ),
+const dayError = Math.abs(RHYTHM.predictedTotal / RHYTHM.actualTotal - 1) * 100;
+
+const prettyDate = new Date(`${RHYTHM.date}T00:00:00`).toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
 });
 
+const STEPS = [
+  {
+    n: "01",
+    t: "Learn the rhythm",
+    b: "370,818 counter-days across every day of 2024 — 8,899,632 hourly readings. From those the model learns twelve signals: hour, weekday, weekend, public and school holidays, distance to the nearest holiday, and each counter's own profile.",
+    f: "Trained through 31 December 2024",
+  },
+  {
+    n: "02",
+    t: "Predict any date",
+    b: "Name a date, a counter, a direction and a vehicle type; get back 24 hourly numbers. It reads only the calendar — no live feed, no recent measurements — so next Tuesday and a Tuesday in 2029 cost the same.",
+    f: "Forecast model · no lag features",
+  },
+  {
+    n: "03",
+    t: "Mark its homework",
+    b: "For 2024 and 2025 we also hold what the road really recorded. Every forecast appears beside the true count for that exact date — including the days the model got wrong.",
+    f: "733,562 recorded days to check against",
+  },
+];
+
+const LIMITS = [
+  {
+    t: "The error figure is an average",
+    b: "±18 vehicles/hour spans all 1,058 series, and most are quiet rural counters. On a motorway counter the real error is far larger — we measured ±77/h on one busy day.",
+  },
+  {
+    t: "Reality stops at 2025",
+    b: "Those are the years we hold recorded counts for. Ask for any other date and you get a forecast with nothing to check it against.",
+  },
+  {
+    t: "The baseline ignores season",
+    b: "March Sundays and November Sundays fold into a single “usual Sunday”, so the baseline runs high in winter and low in spring.",
+  },
+];
+
 export default function Home() {
-  const [sites, setSites] = useState<CounterSite[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<CounterSite | null>(null);
-  const [query, setQuery] = useState("");
-
-  useEffect(() => {
-    fetchSites()
-      .then(setSites)
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load counters"));
-  }, []);
-
-  const matches = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q || !sites) return [];
-    return sites
-      .filter(
-        (s) =>
-          s.route.toLowerCase().includes(q) ||
-          s.localite.toLowerCase().includes(q) ||
-          String(s.poste_id).includes(q),
-      )
-      .sort((a, b) => b.totalPerHour - a.totalPerHour)
-      .slice(0, 7);
-  }, [query, sites]);
-
-  const busiest = useMemo(
-    () => (sites ? [...sites].sort((a, b) => b.totalPerHour - a.totalPerHour)[0] : null),
-    [sites],
-  );
-
   return (
-    <main className="relative flex h-dvh flex-col overflow-hidden bg-[var(--viz-plane)]">
-      {/* ---------------- Header ---------------- */}
-      <header className="relative z-[600] shrink-0 border-b border-[var(--viz-border)] bg-[var(--viz-surface)]">
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 px-5 py-3.5 sm:px-7">
-          <div className="flex min-w-0 items-center gap-3">
-            {/*
-              Mark: the outline of Luxembourg with counter points inside.
-              The silhouette is the convex hull of the 270 real counter
-              positions -- 55 x 80 km against the country's actual 57 x 82 --
-              so the logo is drawn from the same data the app forecasts.
-              Deliberately not the national coat of arms: this is not an
-              official government service and should not look like one.
-            */}
-            <div className="accent-sweep flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm">
-              <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
-                <path
-                  d="M1.00 11.32 L3.10 19.80 L4.71 20.72 L9.26 22.26 L18.97 21.80 L22.96 14.82 L23.00 12.19 L11.66 3.01 L9.93 2.10 L9.15 1.74 L7.82 2.02 L7.60 2.17 L5.05 4.74 L1.93 9.48 Z"
-                  fill="rgba(255,255,255,.22)"
-                  stroke="#fff"
-                  strokeWidth="1.4"
-                  strokeLinejoin="round"
-                />
-                <circle cx="8.4" cy="8.2" r="1.5" fill="#fff" />
-                <circle cx="14.6" cy="13.4" r="1.5" fill="#fff" />
-                <circle cx="9.2" cy="17.4" r="1.5" fill="#fff" />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-sweep text-[17px] font-semibold leading-tight tracking-tight">
-                Traffic Forecasting
+    <div className="bg-[var(--viz-plane)]">
+      {/* ================= HERO ================= */}
+      <section className="stage relative min-h-dvh overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(48rem 30rem at 78% 12%, rgba(0,161,222,.20), transparent 62%), radial-gradient(38rem 26rem at 12% 88%, rgba(237,41,57,.15), transparent 60%)",
+          }}
+        />
+
+        <nav className="relative mx-auto flex max-w-6xl items-center gap-3 px-6 pt-7 sm:px-10">
+          <Image
+            src="/world.png"
+            alt="Luxembourg"
+            width={30}
+            height={30}
+            priority
+            className="h-[30px] w-[30px] rounded-full ring-1 ring-white/20"
+          />
+          <span className="text-[13px] font-semibold tracking-tight">
+            Traffic Forecasting
+          </span>
+          <Link
+            href="/map"
+            className="ml-auto rounded-full border border-white/18 px-4 py-1.5 text-[12px] font-medium text-white/85 transition hover:border-white/40 hover:text-white"
+          >
+            Open the map
+          </Link>
+        </nav>
+
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 pb-24 pt-14 sm:px-10 lg:grid-cols-[1.15fr_.85fr] lg:gap-6 lg:pb-28 lg:pt-20">
+          <div>
+            <Reveal>
+              <p className="eyebrow">Luxembourg · 2024 → 2025</p>
+            </Reveal>
+
+            <Reveal delay={90}>
+              <h1 className="display-xl mt-6 max-w-[15ch]">
+                We taught a model
+                <br />
+                the rhythm of
+                <br />
+                <span
+                  style={{
+                    background:
+                      "linear-gradient(100deg,var(--lux-red-ink),var(--lux-blue-ink))",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                  }}
+                >
+                  a country&rsquo;s roads.
+                </span>
               </h1>
-              <p className="text-[11px] leading-tight text-[var(--viz-muted)]">
-                Luxembourg · 2025 predictions, checked against what really happened
+            </Reveal>
+
+            <Reveal delay={180}>
+              <p className="mt-7 max-w-[46ch] text-[15px] leading-relaxed text-[var(--viz-ink-2)] sm:text-[17px]">
+                8.9 million hourly readings from 270 counters across 2024. From them,
+                an hour-by-hour forecast of 2025 — shown next to what the road
+                actually recorded, so you can mark it yourself.
               </p>
-            </div>
+            </Reveal>
+
+            <Reveal delay={260}>
+              <div className="mt-9 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/map"
+                  className="group inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[13px] font-semibold text-[#0b0b0d] transition hover:gap-3"
+                >
+                  Explore 270 counters
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+                    <path d="M5 12h13M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </Link>
+                <a
+                  href="#proof"
+                  className="rounded-full border border-white/18 px-6 py-3 text-[13px] font-medium text-white/85 transition hover:border-white/40 hover:text-white"
+                >
+                  See how close it got
+                </a>
+              </div>
+            </Reveal>
           </div>
 
-          {/* Search */}
-          <div className="relative ml-auto w-full sm:max-w-[300px]">
-            <svg
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--viz-muted)]"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              aria-hidden
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-            </svg>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search route, town or id…"
-              aria-label="Search counters"
-              className="w-full rounded-xl border border-[var(--viz-border)] bg-[var(--viz-plane)] py-2 pl-9 pr-3 text-[13px] text-[var(--viz-ink)] outline-none transition placeholder:text-[var(--viz-muted)] focus:border-[var(--viz-series)] focus:bg-[var(--viz-surface)] focus:ring-4 focus:ring-[var(--viz-series)]/12"
-            />
-            {matches.length > 0 && (
-              <ul className="glass-strong ring-hairline-lg absolute inset-x-0 top-full z-[700] mt-2 overflow-hidden rounded-xl">
-                {matches.map((s) => (
-                  <li key={s.poste_id}>
-                    <button
-                      onClick={() => {
-                        setSelected(s);
-                        setQuery("");
-                      }}
-                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left transition hover:bg-[var(--viz-series)]/8"
-                    >
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[var(--viz-series)]/12 text-[10px] font-semibold text-[var(--viz-series)]">
-                        {s.route.slice(0, 3)}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[12px] font-medium text-[var(--viz-ink)]">
-                          {s.localite}
-                        </span>
-                        <span className="block truncate text-[10px] text-[var(--viz-muted)]">
-                          {s.route} · counter {s.poste_id}
-                        </span>
-                      </span>
-                      <span className="shrink-0 tabular-nums text-[10px] text-[var(--viz-muted)]">
-                        {Math.round(s.totalPerHour).toLocaleString("en-GB")}/h
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+          {/* The dataset drawing itself. */}
+          <div className="relative mx-auto w-full max-w-[290px] lg:max-w-none">
+            <CounterConstellation className="h-auto w-full" />
+            <p className="mt-4 text-center text-[10.5px] leading-relaxed text-[var(--viz-muted)] lg:text-left">
+              Every one of the 270 counters, at its true position
+            </p>
           </div>
         </div>
-      </header>
+      </section>
 
-      {/* ---------------- Map ---------------- */}
-      <div className="relative flex-1">
-        {error ? (
-          <div className="flex h-full items-center justify-center px-6">
-            <div className="ring-hairline max-w-md rounded-2xl bg-[var(--viz-surface)] px-6 py-5">
-              <div className="mb-2 flex items-center gap-2 text-[var(--status-bad)]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 8v5M12 16.5v.01" strokeLinecap="round" />
-                </svg>
-                <span className="text-sm font-semibold">Cannot reach the API</span>
-              </div>
-              <p className="text-xs leading-relaxed text-[var(--viz-ink-2)]">{error}</p>
-            </div>
-          </div>
-        ) : sites ? (
-          <MapView
-            sites={sites}
-            selectedId={selected?.poste_id ?? null}
-            onSelect={setSelected}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <div className="flex items-center gap-3 text-sm text-[var(--viz-muted)]">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--viz-axis)] border-t-[var(--viz-series)]" />
-              Loading counters…
-            </div>
-          </div>
-        )}
+      {/* ================= SCALE ================= */}
+      <section className="border-b border-[var(--viz-border)]">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-28">
+          <Reveal>
+            <p className="eyebrow">The evidence</p>
+          </Reveal>
 
-        {/* Floating overview -- reads as part of the map, not a panel bolted on. */}
-        {sites && !error && (
-          <div className="glass ring-hairline pointer-events-none absolute left-4 top-4 z-[500] rounded-2xl px-4 py-3 sm:left-6 sm:top-6">
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-semibold leading-none tracking-tight text-[var(--viz-ink)]">
-                {sites.length}
+          <div className="mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { v: 8.9, d: 1, s: "M", l: "hourly readings", n: "every hour of 2024, at every counter that reported" },
+              { v: 270, d: 0, s: "", l: "road counters", n: "permanent stations, nationwide" },
+              { v: 1058, d: 0, s: "", l: "measured series", n: "each counter × direction × vehicle type" },
+              { v: 365, d: 0, s: "", l: "days learned", n: "the whole of 2024, nothing held back" },
+            ].map((m, i) => (
+              <Reveal key={m.l} delay={i * 80}>
+                <div className="pt-1">
+                  <span className="lux-stripe mb-5 block h-[3px] w-11 rounded-full" aria-hidden />
+                  <div className="display-num text-[var(--viz-ink)]">
+                    <CountUp value={m.v} decimals={m.d} suffix={m.s} />
+                  </div>
+                  <div className="mt-3 text-[13px] font-semibold text-[var(--viz-ink)]">
+                    {m.l}
+                  </div>
+                  <p className="mt-1.5 text-[11.5px] leading-relaxed text-[var(--viz-muted)]">
+                    {m.n}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= PROOF ================= */}
+      <section id="proof" className="stage scroll-mt-4 overflow-hidden">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-28">
+          <Reveal>
+            <p className="eyebrow">One real day</p>
+          </Reveal>
+
+          <Reveal delay={80}>
+            <h2 className="display-lg mt-5 max-w-[20ch]">
+              On {prettyDate}, we were{" "}
+              <span style={{ color: "#ee7442" }}>
+                {dayError.toFixed(1)}% off.
               </span>
-              <span className="text-[11px] text-[var(--viz-ink-2)]">counters</span>
-            </div>
-            <p className="mt-1 text-[10px] leading-tight text-[var(--viz-muted)]">
-              Click any point to forecast it
+            </h2>
+          </Reveal>
+
+          <Reveal delay={150}>
+            <p className="mt-5 max-w-[52ch] text-[14px] leading-relaxed text-[var(--viz-ink-2)] sm:text-[15px]">
+              A Wednesday on the A3 at Bettembourg. The model had never seen this day
+              — it was trained six months earlier and reads only the calendar. Blue is
+              what it predicted; orange is what the road recorded.
             </p>
-            {busiest && (
-              <p className="mt-2 border-t border-[var(--viz-grid)] pt-2 text-[10px] leading-tight text-[var(--viz-muted)]">
-                Busiest ·{" "}
-                <span className="font-medium text-[var(--viz-ink-2)]">
-                  {busiest.route} {busiest.localite}
-                </span>
+          </Reveal>
+
+          <Reveal delay={200} className="mt-12">
+            <figure className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8">
+              <RhythmCurve className="h-auto w-full" />
+
+              <figcaption className="mt-7 grid gap-5 border-t border-white/10 pt-6 sm:grid-cols-3">
+                {[
+                  { k: "Recorded", v: RHYTHM.actualTotal, c: "#ee7442" },
+                  { k: "Predicted", v: RHYTHM.predictedTotal, c: "#4a90e8" },
+                  { k: "A usual Wednesday", v: RHYTHM.typicalTotal, c: "#85847e" },
+                ].map((r) => (
+                  <div key={r.k}>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-0.5 w-4 rounded-full"
+                        style={{ background: r.c }}
+                        aria-hidden
+                      />
+                      <span className="text-[11px] text-[var(--viz-ink-2)]">{r.k}</span>
+                    </div>
+                    <div className="mt-1.5 text-[26px] font-semibold tabular-nums tracking-tight">
+                      {r.v.toLocaleString("en-GB")}
+                    </div>
+                  </div>
+                ))}
+              </figcaption>
+            </figure>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <p className="mt-6 max-w-[58ch] text-[12px] leading-relaxed text-[var(--viz-muted)]">
+              Picked as the model&rsquo;s best Wednesday at this counter, out of 49. It
+              is not typical — the same model ran 11% high on a March Wednesday. The
+              map shows you both kinds of day.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ================= HOW ================= */}
+      <section className="border-b border-[var(--viz-border)]">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-28">
+          <Reveal>
+            <p className="eyebrow">How it works</p>
+          </Reveal>
+          <Reveal delay={80}>
+            <h2 className="display-lg mt-5 max-w-[16ch]">
+              2024 taught it. 2025 tests it.
+            </h2>
+          </Reveal>
+
+          <ol className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
+            {STEPS.map((s, i) => (
+              <Reveal as="li" key={s.n} delay={i * 100}>
+                <div className="pt-1">
+                  <span className="lux-stripe mb-5 block h-[3px] w-11 rounded-full" aria-hidden />
+                  <span className="text-[11px] font-semibold tabular-nums text-[var(--viz-series)]">
+                    {s.n}
+                  </span>
+                  <h3 className="mt-3 text-[19px] font-semibold tracking-tight text-[var(--viz-ink)]">
+                    {s.t}
+                  </h3>
+                  <p className="mt-3 text-[13px] leading-relaxed text-[var(--viz-ink-2)]">
+                    {s.b}
+                  </p>
+                  <p className="mt-4 text-[11px] text-[var(--viz-muted)]">{s.f}</p>
+                </div>
+              </Reveal>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ================= READING ================= */}
+      <section className="border-b border-[var(--viz-border)] bg-[var(--viz-surface)]">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-28">
+          <Reveal>
+            <p className="eyebrow">Reading a forecast</p>
+          </Reveal>
+          <Reveal delay={80}>
+            <h2 className="display-lg mt-5 max-w-[18ch]">
+              Every hour carries three numbers.
+            </h2>
+          </Reveal>
+
+          <div className="mt-14 grid gap-10 lg:grid-cols-2 lg:gap-16">
+            <dl className="space-y-8">
+              {[
+                {
+                  c: "var(--viz-actual)",
+                  dash: false,
+                  t: "What really happened",
+                  b: "The count the counter recorded that hour. A whole number, straight from the open data.",
+                },
+                {
+                  c: "var(--viz-series)",
+                  dash: false,
+                  t: "Our prediction",
+                  b: "What the model expected, knowing only the calendar — never the answer.",
+                },
+                {
+                  c: "var(--viz-baseline)",
+                  dash: true,
+                  t: "A usual Wednesday",
+                  b: "Not one particular day. It averages every Wednesday this counter recorded in 2024, hour by hour — the 08:00 figure averages all the Wednesday 08:00s.",
+                },
+              ].map((r, i) => (
+                <Reveal key={r.t} delay={i * 90}>
+                  <div className="flex gap-4">
+                    <span
+                      className={`mt-2.5 h-0 w-7 shrink-0 ${r.dash ? "border-t-2 border-dashed" : "border-t-[3px]"}`}
+                      style={r.dash ? { borderColor: r.c } : { borderColor: r.c }}
+                      aria-hidden
+                    />
+                    <div>
+                      <dt className="text-[15px] font-semibold tracking-tight text-[var(--viz-ink)]">
+                        {r.t}
+                      </dt>
+                      <dd className="mt-1.5 text-[13px] leading-relaxed text-[var(--viz-ink-2)]">
+                        {r.b}
+                      </dd>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </dl>
+
+            <Reveal delay={160}>
+              <blockquote className="rounded-2xl bg-[var(--viz-ink)]/[0.04] p-7 lg:sticky lg:top-10">
+                <p className="text-[17px] leading-relaxed tracking-tight text-[var(--viz-ink)]">
+                  Like a weather normal: <em>“tomorrow 18°, normal for the season
+                  21°”</em>. The 21 was never a measured day — it is there to tell you
+                  whether tomorrow is unusual.
+                </p>
+                <footer className="mt-4 text-[12px] leading-relaxed text-[var(--viz-ink-2)]">
+                  That is exactly the job the dashed line does. It is a yardstick, not
+                  a reading — which is also why the raw figure arrives with decimals:
+                  divide 13,418 vehicles by 27 recorded Sundays and you get 496.9.
+                </footer>
+              </blockquote>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= LIMITS ================= */}
+      <section className="border-b border-[var(--viz-border)]">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-28">
+          <Reveal>
+            <p className="eyebrow">What it cannot do</p>
+          </Reveal>
+          <Reveal delay={80}>
+            <h2 className="display-lg mt-5 max-w-[20ch]">
+              Worth knowing before you trust a number.
+            </h2>
+          </Reveal>
+
+          <ul className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
+            {LIMITS.map((c, i) => (
+              <Reveal as="li" key={c.t} delay={i * 100}>
+                <div className="pt-1">
+                  <span className="lux-stripe mb-5 block h-[3px] w-11 rounded-full" aria-hidden />
+                  <h3 className="text-[16px] font-semibold tracking-tight text-[var(--viz-ink)]">
+                    {c.t}
+                  </h3>
+                  <p className="mt-2.5 text-[12.5px] leading-relaxed text-[var(--viz-ink-2)]">
+                    {c.b}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ================= SOURCE ================= */}
+      <section className="border-b border-[var(--viz-border)] bg-[var(--viz-surface)]">
+        <div className="mx-auto max-w-6xl px-6 py-20 sm:px-10 sm:py-24">
+          <Reveal>
+            <p className="eyebrow">Where the data comes from</p>
+          </Reveal>
+
+          <div className="mt-8 grid gap-8 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
+            <Reveal delay={80}>
+              <p className="text-[17px] leading-relaxed tracking-tight text-[var(--viz-ink)]">
+                Every number here traces back to{" "}
+                <a
+                  href="https://data.public.lu/en/datasets/pch-comptage-trafic/"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="underline decoration-[var(--viz-series)]/40 underline-offset-4 transition hover:decoration-[var(--viz-series)]"
+                >
+                  PCH&nbsp;: Comptage Trafic
+                </a>
+                , the open dataset of Luxembourg&rsquo;s permanent traffic counting
+                stations.
               </p>
-            )}
-          </div>
-        )}
+              <p className="mt-4 max-w-[54ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
+                Nothing here is simulated — the counts are what the road
+                administration&rsquo;s own equipment recorded. Those permanent stations
+                are the <em>postes</em> the data is keyed on, which is why every
+                counter carries a <code>POSTE_ID</code>.
+              </p>
+            </Reveal>
 
-        {/* Size legend */}
-        {sites && !error && (
-          <div className="glass ring-hairline pointer-events-none absolute bottom-6 left-4 z-[500] rounded-xl px-3.5 py-2.5 sm:left-6">
-            <div className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--viz-muted)]">
-              Point size
-            </div>
-            <div className="flex items-center gap-2.5">
-              <svg width="52" height="20" aria-hidden>
-                <circle cx="8" cy="10" r="3.5" fill="var(--viz-series)" fillOpacity="0.7" />
-                <circle cx="24" cy="10" r="6.5" fill="var(--viz-series)" fillOpacity="0.7" />
-                <circle cx="43" cy="10" r="9" fill="var(--viz-series)" fillOpacity="0.7" />
-              </svg>
-              <span className="text-[10px] text-[var(--viz-ink-2)]">vehicles / hour</span>
-            </div>
+            <Reveal delay={140}>
+              <dl className="text-[12.5px]">
+                {[
+                  ["Publisher", "Administration des Ponts et Chaussées"],
+                  ["Portal", "data.public.lu"],
+                  ["Licence", "Creative Commons Zero (CC0)"],
+                  ["Files used", "2024 and 2025 annual exports"],
+                ].map(([k, v]) => (
+                  <div
+                    key={k}
+                    className="flex gap-4 border-t border-[var(--viz-grid)] py-3 first:border-t-0"
+                  >
+                    <dt className="shrink-0 text-[var(--viz-muted)]">{k}</dt>
+                    <dd className="ml-auto text-right font-medium text-[var(--viz-ink)]">
+                      {v}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </Reveal>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
 
-      {selected && (
-        // Keyed so picking a different counter remounts with fresh controls
-        // rather than carrying the previous counter's selection across.
-        <ForecastPanel
-          key={selected.poste_id}
-          site={selected}
-          onClose={() => setSelected(null)}
+      {/* ================= CTA ================= */}
+      <section className="stage relative overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(40rem 22rem at 50% 120%, rgba(0,161,222,.22), transparent 65%)",
+          }}
         />
-      )}
-    </main>
+        <div className="relative mx-auto max-w-6xl px-6 py-24 text-center sm:px-10 sm:py-32">
+          <Reveal>
+            <h2 className="display-lg mx-auto max-w-[16ch]">
+              Pick a counter. Pick a day.
+            </h2>
+          </Reveal>
+          <Reveal delay={90}>
+            <p className="mx-auto mt-5 max-w-[44ch] text-[14px] leading-relaxed text-[var(--viz-ink-2)]">
+              270 counters on the map. Choose a date, a direction and a vehicle type,
+              and see how the forecast held up — hour by hour.
+            </p>
+          </Reveal>
+          <Reveal delay={160}>
+            <Link
+              href="/map"
+              className="group mt-10 inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-[14px] font-semibold text-[#0b0b0d] transition hover:gap-3"
+            >
+              Open the map
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+                <path d="M5 12h13M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          </Reveal>
+        </div>
+
+        <footer className="relative border-t border-white/10">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-6 py-7 text-[11px] text-[var(--viz-muted)] sm:px-10">
+            <span>
+              Traffic counts:{" "}
+              <a
+                href="https://data.public.lu/en/datasets/pch-comptage-trafic/"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="underline underline-offset-2 transition hover:text-[var(--viz-ink-2)]"
+              >
+                PCH&nbsp;: Comptage Trafic
+              </a>{" "}
+              · Ponts et Chaussées · CC0
+            </span>
+            <span>Model trained through 31 December 2024</span>
+
+            <a
+              href="https://www.linkedin.com/in/sachin-bagaria/"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="group ml-auto inline-flex items-center gap-2 rounded-full border border-white/12 py-1.5 pl-2.5 pr-3.5 transition hover:border-white/35 hover:text-[var(--viz-ink)]"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden
+                className="transition group-hover:text-[var(--lux-blue)]"
+              >
+                <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm7 0h3.8v1.65h.05A4.17 4.17 0 0 1 17.6 8.7c4 0 4.75 2.5 4.75 5.77V21h-4v-5.73c0-1.37-.03-3.13-1.96-3.13-1.96 0-2.26 1.49-2.26 3.03V21h-4V9Z" />
+              </svg>
+              Built by Sachin Bagaria
+            </a>
+          </div>
+        </footer>
+      </section>
+    </div>
   );
 }

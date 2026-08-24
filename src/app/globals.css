@@ -385,3 +385,224 @@ button:disabled {
 :root[data-theme="dark"] .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
 }
+
+/* ==========================================================================
+   Landing page motion
+   ========================================================================== */
+
+/* Scroll reveal. Transform + opacity only, so it stays on the compositor. */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.reveal[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* Constellation: the border draws, then the counters land. */
+@keyframes ccDraw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes ccDot {
+  from { opacity: 0; transform: scale(0.2); }
+  to { opacity: inherit; transform: scale(1); }
+}
+
+.cc-outline {
+  stroke-dasharray: 1;
+  animation: ccDraw 2.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.cc-dots circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ccDot 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Rhythm curve: baseline first, then the two lines race across together. */
+@keyframes rcDraw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes rcFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.rc-typical,
+.rc-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+[data-shown="true"] .rc-typical {
+  animation: rcDraw 1.6s ease-out 0.1s forwards;
+}
+[data-shown="true"] .rc-actual {
+  animation: rcDraw 2s cubic-bezier(0.5, 0, 0.2, 1) 0.35s forwards;
+}
+[data-shown="true"] .rc-pred {
+  animation: rcDraw 2s cubic-bezier(0.5, 0, 0.2, 1) 0.5s forwards;
+}
+.rc-area {
+  opacity: 0;
+}
+[data-shown="true"] .rc-area {
+  animation: rcFade 1.2s ease-out 1.4s forwards;
+}
+
+/* Fluid display type -- one scale used across the landing page. */
+.display-xl {
+  font-size: clamp(2.75rem, 7.2vw, 6rem);
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+}
+
+.display-lg {
+  font-size: clamp(1.9rem, 4.4vw, 3.4rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+.display-num {
+  font-size: clamp(2.4rem, 6vw, 4.6rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--viz-muted);
+}
+
+/* A dark stage for the hero, independent of the page theme. */
+.stage {
+  --viz-surface: #16161a;
+  --viz-plane: #0b0b0d;
+  --viz-ink: #ffffff;
+  --viz-ink-2: #b9b8b2;
+  --viz-muted: #85847e;
+  --viz-grid: #26262a;
+  --viz-axis: #35353a;
+  --viz-border: rgba(255, 255, 255, 0.11);
+  --viz-series: #4a90e8;
+  --viz-actual: #ee7442;
+  --viz-baseline: #85847e;
+  color-scheme: dark;
+  background: var(--viz-plane);
+  color: var(--viz-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .cc-outline,
+  .cc-dots circle,
+  .rc-typical,
+  .rc-line,
+  .rc-area {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ==========================================================================
+   Luxembourg national colours -- BRAND layer only
+   ==========================================================================
+   The flag is red / white / light-blue. These are used for identity: stripes,
+   gradients, glows, selection. They are deliberately NOT used for data marks:
+
+   - Flag cyan #00A1DE scores 2.86:1 on the light chart surface, under the 3:1
+     floor a data line must clear.
+   - Every cyan-leaning step dark enough to pass then fell to normal-vision
+     dE 13.5-14.5 against the gray baseline, under the floor of 15 -- readers
+     with full colour vision could not separate the prediction from the
+     "usual day" line.
+   - Flag red also collides with --status-bad, and a status hue must never
+     double as a series colour.
+
+   So the validated blue/orange palette still owns the charts.
+   ========================================================================== */
+:root {
+  --lux-red: #ed2939;    /* true flag red -- decorative only */
+  --lux-white: #ffffff;
+  --lux-blue: #00a1de;   /* true flag cyan -- decorative only */
+
+  /* Text-safe steps: white type clears AA on both (4.82:1 and 6.02:1). */
+  --lux-red-ink: #e01b2b;
+  --lux-blue-ink: #00699a;
+}
+
+/* On the dark stage the true flag hues read cleanly, so they carry text there. */
+.stage {
+  --lux-red-ink: #f04452;
+  --lux-blue-ink: #33b4e5;
+}
+
+/* The flag itself, as a rule. Used on card top edges and panel headers. */
+.lux-stripe {
+  background: linear-gradient(
+    90deg,
+    var(--lux-red) 0 33.33%,
+    var(--lux-white) 33.33% 66.66%,
+    var(--lux-blue) 66.66% 100%
+  );
+}
+
+/* Vertical variant, for the left edge of the verdict card. */
+.lux-stripe-y {
+  background: linear-gradient(
+    180deg,
+    var(--lux-red) 0 33.33%,
+    var(--lux-white) 33.33% 66.66%,
+    var(--lux-blue) 66.66% 100%
+  );
+}
+
+/* Buttons and filled surfaces: flag-derived, but stepped so white type is
+   legible across the whole sweep -- a true tricolour would put white text on
+   a white band. */
+.accent-sweep {
+  background: linear-gradient(
+    100deg,
+    var(--lux-red-ink) 0%,
+    color-mix(in srgb, var(--lux-red-ink) 45%, var(--lux-blue-ink)) 52%,
+    var(--lux-blue-ink) 100%
+  );
+}
+
+.text-sweep {
+  background: linear-gradient(
+    100deg,
+    var(--lux-red-ink) 0%,
+    var(--lux-blue-ink) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--lux-blue) 30%, transparent);
+}

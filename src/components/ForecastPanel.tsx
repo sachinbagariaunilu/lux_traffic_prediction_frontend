@@ -171,7 +171,7 @@ function Verdict({
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-[var(--viz-surface)] ring-hairline">
-      <span className="accent-sweep absolute inset-y-0 left-0 w-[3px]" aria-hidden />
+      <span className="lux-stripe-y absolute inset-y-0 left-0 w-[3px]" aria-hidden />
       <div className="py-4 pl-5 pr-4">
         <p className="text-[15px] font-semibold leading-snug tracking-tight text-[var(--viz-ink)]">
           {headline}
@@ -371,7 +371,7 @@ export default function ForecastPanel({
       >
         {/* ---------- Header ---------- */}
         <header className="relative shrink-0 overflow-hidden bg-[var(--viz-surface)] px-6 pb-5 pt-5">
-          <span className="accent-sweep absolute inset-x-0 top-0 h-[3px]" aria-hidden />
+          <span className="lux-stripe absolute inset-x-0 top-0 h-[3px]" aria-hidden />
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1.5 flex items-center gap-2">

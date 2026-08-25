@@ -1,10 +1,13 @@
 /** Shapes returned by the Luxembourg Traffic Forecast API. */
 
+/** The dataset's two vehicle classes: V = cars, C = trucks. */
+export type VehiculeCode = "V" | "C";
+
 /** One row of /counters -- a single (counter, direction, vehicle) series. */
 export interface CounterSeries {
   poste_id: number;
   direction: number;
-  vehicule: "V" | "C";
+  vehicule: VehiculeCode;
   label: string;
   route: string;
   localite: string;
@@ -50,7 +53,7 @@ export interface MergedHour {
   actual: number | null;
 }
 
-/** Per-counter actuals, as written by scripts/build_actuals.py. */
+/** Per-counter actuals from GET /actuals/{poste_id}. 2025 only. */
 export interface ActualsFile {
   poste_id: number;
   /** "<direction>-<vehicule>" -> "YYYY-MM-DD" -> 24 hourly counts. */

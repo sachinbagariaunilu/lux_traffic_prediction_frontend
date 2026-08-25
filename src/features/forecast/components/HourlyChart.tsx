@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { formatCount, formatHour } from "@/lib/format";
 import type { MergedHour } from "@/lib/types";
 
 /**
@@ -20,9 +21,6 @@ import type { MergedHour } from "@/lib/types";
  * Dashing the baseline keeps identity off colour alone. Palette validated
  * all-pairs in both modes: worst CVD dE 9.8 light / 11.3 dark.
  */
-
-const fmt = (n: number) => n.toLocaleString("en-GB");
-const hourLabel = (h: number) => `${String(h).padStart(2, "0")}:00`;
 
 interface TooltipProps {
   active?: boolean;
@@ -37,9 +35,9 @@ function ChartTooltip({ active, payload, dayName }: TooltipProps) {
   const err = p.actual !== null ? p.predicted - p.actual : null;
 
   return (
-    <div className="glass-strong ring-hairline-lg min-w-[168px] rounded-xl px-3.5 py-2.5">
-      <div className="mb-2 text-[11px] font-semibold tracking-tight text-[var(--viz-ink)]">
-        {hourLabel(p.hour)}–{hourLabel((p.hour + 1) % 24)}
+    <div className="glass-strong ring-hairline-lg min-w-[172px] px-3.5 py-3">
+      <div className="label-mono mb-2.5 text-[var(--viz-ink)]">
+        {formatHour(p.hour)}–{formatHour((p.hour + 1) % 24)}
       </div>
       <dl className="space-y-1 text-xs">
         {p.actual !== null && (
@@ -47,7 +45,7 @@ function ChartTooltip({ active, payload, dayName }: TooltipProps) {
             <span className="h-0.5 w-4 rounded-full bg-[var(--viz-actual)]" />
             <dt className="text-[var(--viz-ink-2)]">Actual</dt>
             <dd className="ml-auto font-semibold tabular-nums text-[var(--viz-ink)]">
-              {fmt(p.actual)}
+              {formatCount(p.actual)}
             </dd>
           </div>
         )}
@@ -55,7 +53,7 @@ function ChartTooltip({ active, payload, dayName }: TooltipProps) {
           <span className="h-0.5 w-4 rounded-full bg-[var(--viz-series)]" />
           <dt className="text-[var(--viz-ink-2)]">Predicted</dt>
           <dd className="ml-auto font-semibold tabular-nums text-[var(--viz-ink)]">
-            {fmt(p.predicted)}
+            {formatCount(p.predicted)}
           </dd>
         </div>
         <div className="flex items-center gap-2">
@@ -64,13 +62,13 @@ function ChartTooltip({ active, payload, dayName }: TooltipProps) {
             Usual {dayName ?? "day"}
           </dt>
           <dd className="ml-auto tabular-nums text-[var(--viz-ink-2)]">
-            {fmt(p.typical_2024)}
+            {formatCount(p.typical_2024)}
           </dd>
         </div>
       </dl>
       {err !== null && (
         <div className="mt-1.5 border-t border-[var(--viz-grid)] pt-1.5 text-xs text-[var(--viz-ink-2)]">
-          Model was {err === 0 ? "exact" : `${fmt(Math.abs(err))} ${err > 0 ? "high" : "low"}`}
+          Model was {err === 0 ? "exact" : `${formatCount(Math.abs(err))} ${err > 0 ? "high" : "low"}`}
         </div>
       )}
     </div>
@@ -90,16 +88,16 @@ export default function HourlyChart({
     <figure className="viz-root m-0">
       <figcaption className="mb-4 flex flex-wrap items-center gap-1.5 text-[11px]">
         {hasActual && (
-          <span className="flex items-center gap-1.5 rounded-full bg-[var(--viz-actual)]/10 py-1 pl-2 pr-2.5 font-medium text-[var(--viz-actual)]">
+          <span className="label-mono flex items-center gap-1.5 bg-[var(--viz-actual)]/10 px-2 py-1.5 text-[var(--viz-actual)]">
             <span className="h-0.5 w-3.5 rounded-full bg-[var(--viz-actual)]" />
             Really happened
           </span>
         )}
-        <span className="flex items-center gap-1.5 rounded-full bg-[var(--viz-series)]/10 py-1 pl-2 pr-2.5 font-medium text-[var(--viz-series)]">
+        <span className="label-mono flex items-center gap-1.5 bg-[var(--viz-series)]/10 px-2 py-1.5 text-[var(--viz-series)]">
           <span className="h-0.5 w-3.5 rounded-full bg-[var(--viz-series)]" />
           Our prediction
         </span>
-        <span className="flex items-center gap-1.5 rounded-full bg-[var(--viz-ink)]/5 py-1 pl-2 pr-2.5 text-[var(--viz-ink-2)]">
+        <span className="label-mono flex items-center gap-1.5 bg-[var(--viz-ink)]/5 px-2 py-1.5">
           <span className="w-3.5 border-t-2 border-dashed border-[var(--viz-baseline)]" />
           A usual {dayName || "day"}
         </span>
@@ -167,7 +165,7 @@ export default function HourlyChart({
         </ResponsiveContainer>
       </div>
 
-      <p className="mt-1 text-center text-[11px] text-[var(--viz-muted)]">Hour of day</p>
+      <p className="label-mono mt-1 text-center">Hour of day</p>
     </figure>
   );
 }

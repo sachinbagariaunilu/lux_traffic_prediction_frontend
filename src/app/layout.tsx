@@ -1,14 +1,34 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+/**
+ * Three faces, three jobs -- the split an engineering-studio layout needs:
+ *
+ *   Space Grotesk  headlines, set uppercase. A techno grotesque: squared bowls,
+ *                  flat terminals, and it holds together at 1.0 line-height,
+ *                  where a humanist face starts to look cramped.
+ *   Inter          body copy at weight 350. Loaded as the variable font, so the
+ *                  in-between weight costs nothing extra.
+ *   Space Mono     eyebrows, labels, tags. Space Grotesk was drawn from it, so
+ *                  the pairing is a family resemblance rather than a contrast.
+ *
+ * All three are self-hosted by next/font at build time -- no CDN request, no
+ * layout shift, no third-party origin in the CSP.
+ */
+const display = Space_Grotesk({
+  variable: "--font-grotesk",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const sans = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const mono = Space_Mono({
+  variable: "--font-space-mono",
+  weight: ["400", "700"],
   subsets: ["latin"],
 });
 
@@ -44,9 +64,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${display.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

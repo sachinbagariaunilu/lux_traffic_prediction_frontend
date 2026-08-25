@@ -1,6 +1,4 @@
-"use client";
-
-import { RHYTHM } from "@/lib/landing-data";
+import { RHYTHM } from "../data/landing-data";
 
 /**
  * One real day at counter 1410, drawn as the page's second signature graphic.
@@ -9,6 +7,9 @@ import { RHYTHM } from "@/lib/landing-data";
  *
  * Hand-rolled SVG rather than a chart library: this is a static hero graphic,
  * and shipping a charting runtime for 24 points would be indefensible.
+ *
+ * Server-rendered for the same reason as CounterConstellation -- the path
+ * maths runs on the server and the client receives markup.
  */
 
 const W = 900;

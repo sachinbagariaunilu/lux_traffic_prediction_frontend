@@ -1,6 +1,4 @@
-"use client";
-
-import { COUNTERS, LUX_OUTLINE, VIEW } from "@/lib/landing-data";
+import { COUNTERS, LUX_OUTLINE, VIEW } from "../data/landing-data";
 
 /**
  * The signature graphic: Luxembourg's border with all 270 real counters
@@ -9,6 +7,10 @@ import { COUNTERS, LUX_OUTLINE, VIEW } from "@/lib/landing-data";
  * itself, not an illustration of it.
  *
  * Dot radius follows sqrt(weight) so area, not radius, tracks traffic.
+ *
+ * No hooks and no handlers, so this stays a Server Component: the border path
+ * and all 270 positions render to HTML once and never ship as JavaScript. The
+ * draw-in is CSS (.cc-outline / .cc-dots), not JS.
  */
 export default function CounterConstellation({
   className = "",

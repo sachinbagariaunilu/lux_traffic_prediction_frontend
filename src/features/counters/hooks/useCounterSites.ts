@@ -1,0 +1,42 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { fetchSites } from "@/lib/api/counters";
+import type { CounterSite } from "@/lib/types";
+
+/**
+ * Loads the counter network once, on mount. `sites === null` means still
+ * loading; an error means the API is unreachable and the map cannot be drawn
+ * at all, so the caller shows the message instead.
+ */
+export function useCounterSites() {
+  const [sites, setSites] = useState<CounterSite[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    fetchSites()
+      .then((s) => live && setSites(s))
+      .catch(
+        (e) =>
+          live &&
+          setError(e instanceof Error ? e.message : "Failed to load counters"),
+      );
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  // Single pass -- fetchSites already sorts ascending, but relying on that
+  // ordering here would couple this hook to a draw-order decision.
+  const busiest = useMemo(
+    () =>
+      sites?.reduce<CounterSite | null>(
+        (best, s) => (!best || s.totalPerHour > best.totalPerHour ? s : best),
+        null,
+      ) ?? null,
+    [sites],
+  );
+
+  return { sites, error, busiest };
+}

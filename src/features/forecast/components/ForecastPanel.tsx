@@ -1,0 +1,138 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import ErrorNotice from "@/components/ui/ErrorNotice";
+import type { CounterSite } from "@/lib/types";
+import { useForecastRun } from "../hooks/useForecastRun";
+import { useRecordedDays } from "../hooks/useRecordedDays";
+import { useSeriesSelection } from "../hooks/useSeriesSelection";
+import { DEFAULT_DATE } from "../lib/constants";
+import { summariseDay } from "../lib/hourly";
+import ForecastControls from "./ForecastControls";
+import ForecastReport from "./ForecastReport";
+import PanelHeader from "./PanelHeader";
+import SeriesPicker from "./SeriesPicker";
+
+/**
+ * Slide-over for one counter: pick a series and a date, run the forecast, read
+ * the result. This component holds the panel's own concerns -- the chosen date,
+ * dismissal, and which of the four body states to show -- while the selection,
+ * the recorded days and the request itself live in hooks beside it.
+ */
+export default function ForecastPanel({
+  site,
+  onClose,
+}: {
+  site: CounterSite;
+  onClose: () => void;
+}) {
+  const selection = useSeriesSelection(site);
+  const { direction, vehicule, series } = selection;
+  const [date, setDate] = useState(DEFAULT_DATE);
+
+  const recorded = useRecordedDays(site.poste_id, direction, vehicule);
+  const { meta, hours, loading, error, run, clearError } = useForecastRun({
+    poste_id: site.poste_id,
+    direction,
+    vehicule,
+    date,
+  });
+
+  const summary = hours ? summariseDay(hours) : null;
+  const panelRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    panelRef.current?.focus();
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-[900] bg-[#100f0d]/28 backdrop-blur-[2px] transition-opacity lg:bg-[#100f0d]/14"
+        onClick={onClose}
+        aria-hidden
+      />
+
+      <aside
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Forecast for ${site.route} at ${site.localite}`}
+        tabIndex={-1}
+        className="ring-hairline-lg fixed inset-y-0 right-0 z-[1000] flex w-full max-w-[540px] flex-col bg-[var(--viz-plane)] outline-none animate-[slideIn_.3s_cubic-bezier(.22,1,.36,1)]"
+      >
+        <PanelHeader site={site} heading={series?.sens} onClose={onClose} />
+
+        <ForecastControls
+          site={site}
+          date={date}
+          onDateChange={(d) => {
+            setDate(d);
+            clearError();
+          }}
+          directions={selection.directions}
+          direction={direction}
+          onDirectionChange={(d) => {
+            selection.setDirection(d);
+            clearError();
+          }}
+          vehicles={selection.vehicles}
+          vehicule={vehicule}
+          onVehiculeChange={(v) => {
+            selection.setVehicule(v);
+            clearError();
+          }}
+          recorded={recorded}
+          loading={loading}
+          onRun={run}
+        />
+
+        <div className="thin-scroll flex-1 overflow-y-auto px-6 py-5">
+          {error && (
+            <ErrorNotice title="Could not forecast" message={error} size="sm" />
+          )}
+
+          {loading && !hours && (
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="h-20 animate-pulse bg-[var(--viz-surface)]"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Opened, nothing requested yet -- describe the counter, don't guess. */}
+          {!hours && !loading && !error && (
+            <SeriesPicker
+              site={site}
+              direction={direction}
+              vehicule={vehicule}
+              onSelect={(d, v) => {
+                selection.setDirection(d);
+                selection.setVehicule(v);
+                clearError();
+              }}
+            />
+          )}
+
+          {hours && meta && summary && !error && (
+            <ForecastReport
+              date={date}
+              direction={direction}
+              vehicule={vehicule}
+              series={series}
+              meta={meta}
+              hours={hours}
+              summary={summary}
+            />
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}

@@ -1,81 +1,87 @@
 @import "tailwindcss";
 
-/*
- * Data-viz tokens. Both modes are selected -- the dark column is the same hues
- * re-stepped for the dark surface, not an automatic flip. Palette validated
- * all-pairs in both modes (worst CVD dE 9.8 light / 11.3 dark, contrast >= 3:1).
- */
+/* ==========================================================================
+   Tokens -- one light, editorial ground
+   ==========================================================================
+   The app commits to a single warm-paper look rather than tracking the OS
+   theme. Two reasons, both practical: an oversized-type editorial layout is
+   designed against one ground, and dropping the dark column freed the chart
+   palette from having to satisfy two surfaces at once -- which is why the
+   figures below are so much healthier than the dual-mode set they replace.
+
+   Measured, not estimated (CIEDE2000 + Machado severity 1.0):
+
+     predicted  #1f6ac4   5.36:1 on white,  4.87:1 on grey
+     actual     #d9541f   4.01:1 on white,  3.64:1 on grey
+     baseline   #8b887e   3.55:1 on white,  3.22:1 on grey   (dashed, context)
+     worst pairwise CVD dE 21.3  -- floor is 9.0, the old palette managed 9.8
+
+   The accent tile carries black type: #0a0a0a on flag cyan is 6.74:1, which is
+   what lets the flag's own hue do the job a brand colour should.
+
+   Data lines must clear 3:1 against their surface; every token that carries
+   small text clears AA 4.5. `--viz-muted` used to sit at 3.28:1 and did not.
+   ========================================================================== */
 :root {
   color-scheme: light;
 
-  --viz-surface: #fcfcfb;   /* card / chart surface */
-  --viz-plane: #f9f9f7;     /* page behind the cards */
-  --viz-ink: #0b0b0b;
-  --viz-ink-2: #52514e;
-  --viz-muted: #898781;     /* axis + labels */
-  --viz-grid: #e1e0d9;
-  --viz-axis: #c3c2b7;
-  --viz-border: rgba(11, 11, 11, 0.1);
+  /* Ground -- neutral grey, not warm paper: it lets one saturated accent do
+     all the talking, and keeps photography and map tiles honest. */
+  --viz-surface: #ffffff;   /* cards, chart plane, panels */
+  --viz-plane: #f4f4f4;     /* the ground everything sits on */
+  --viz-band: #ebebeb;      /* quiet alternating band */
 
-  --viz-series: #2a78d6;    /* slot 1 -- predicted */
-  --viz-actual: #eb6834;    /* slot 2 -- recorded truth */
-  --viz-baseline: #898781;  /* context, always dashed */
+  /* Ink */
+  --viz-ink: #0a0a0a;
+  --viz-ink-2: #3d3d3d;     /* body copy            9.88:1 */
+  --viz-muted: #6e6e6e;     /* labels, axes, meta   4.64:1 */
 
-  /* Status is fixed, never themed, and never reused as a series colour. */
-  --status-warn: #fab219;
-  --status-bad: #d03b3b;
+  /* Structure */
+  --viz-grid: #e4e4e4;
+  --viz-axis: #c9c9c9;
+  --viz-border: rgba(10, 10, 10, 0.1);
+  --viz-hairline: rgba(10, 10, 10, 0.14);
+
+  /* Data marks */
+  --viz-series: #1f6ac4;    /* slot 1 -- predicted */
+  --viz-actual: #d9541f;    /* slot 2 -- recorded truth */
+  --viz-baseline: #8b887e;  /* context, always dashed */
+
+  /* Status is fixed and never doubles as a series colour. */
+  --status-warn: #8f5c05;
+  --status-bad: #c0271f;
+
+  /* Editorial rhythm -- the whitespace scale the sections share. */
+  --bay: clamp(4.5rem, 8vw, 8.5rem);
+
+  /* Blocks are square; only controls round, and only a little. */
+  --r-control: 8px;
 
   --background: var(--viz-plane);
   --foreground: var(--viz-ink);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-
-    --viz-surface: #1a1a19;
-    --viz-plane: #0d0d0d;
-    --viz-ink: #ffffff;
-    --viz-ink-2: #c3c2b7;
-    --viz-muted: #898781;
-    --viz-grid: #2c2c2a;
-    --viz-axis: #383835;
-    --viz-border: rgba(255, 255, 255, 0.1);
-
-    --viz-series: #3987e5;
-    --viz-actual: #d95926;
-    --viz-baseline: #898781;
-  }
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-
-  --viz-surface: #1a1a19;
-  --viz-plane: #0d0d0d;
-  --viz-ink: #ffffff;
-  --viz-ink-2: #c3c2b7;
-  --viz-muted: #898781;
-  --viz-grid: #2c2c2a;
-  --viz-axis: #383835;
-  --viz-border: rgba(255, 255, 255, 0.1);
-
-  --viz-series: #3987e5;
-  --viz-actual: #d95926;
-  --viz-baseline: #898781;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-space-mono);
+  --font-display: var(--font-grotesk);
 }
 
 body {
   background: var(--viz-plane);
   color: var(--viz-ink);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* 350: between Light and Regular. Body copy this size reads better a shade
+     lighter than the default, and the variable font makes it free. */
+  font-weight: 350;
+  -webkit-font-smoothing: antialiased;
+}
+
+strong,
+b {
+  font-weight: 600;
 }
 
 /* Anything clickable gets the hand. Tailwind's reset sets buttons to
@@ -92,179 +98,589 @@ button:disabled {
   cursor: not-allowed;
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(24px);
-    opacity: 0;
+::selection {
+  background: color-mix(in srgb, var(--lux-blue) 26%, transparent);
+}
+
+/* ==========================================================================
+   Components
+   ==========================================================================
+   Everything below lives in @layer components on purpose. Unlayered CSS beats
+   every layer, so an unlayered `.label-mono { color: ... }` silently wins
+   against a Tailwind `text-*` utility on the same element -- which is exactly
+   how a label on the accent tile ends up grey and unreadable. Inside the
+   components layer, utilities override these defaults, which is what any
+   caller reasonably expects.
+
+   The leaflet block further down stays OUT of the layer: it has to beat
+   leaflet's own stylesheet, which is unlayered because it is imported from JS.
+   ========================================================================== */
+@layer components {
+  /* ==========================================================================
+     Type -- display uppercase, body light, labels mono
+     ==========================================================================
+     Headlines are Space Grotesk, uppercase, at a line-height of 1. Three things
+     make that work where it would fail with a humanist face:
+
+       - Uppercase has no descenders, so lines can sit tight without collision.
+       - Tracking stays at normal. Caps at this size are already wide; pulling
+         them in is what makes big type look squeezed rather than engineered.
+       - Weight stays at 500. Uppercase reads a weight heavier than it is.
+
+     Body copy answers in Inter at 350 and sentence case; labels answer in Space
+     Mono. Three registers, so a page can change voice without changing size.
+     ========================================================================== */
+  .display-xl,
+  .display-lg,
+  .display-md,
+  .display-num {
+    font-family: var(--font-grotesk), system-ui, sans-serif;
+    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+
+  .display-xl {
+    font-size: clamp(2.25rem, 5.6vw, 4.75rem);
+    line-height: 1;
+    text-wrap: balance;
   }
-}
 
-@keyframes riseIn {
-  from {
-    transform: translateY(8px);
-    opacity: 0;
+  .display-lg {
+    font-size: clamp(1.625rem, 3.4vw, 2.875rem);
+    line-height: 1.02;
+    text-wrap: balance;
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+
+  .display-md {
+    font-size: clamp(1.25rem, 1.8vw, 1.5rem);
+    line-height: 1.05;
   }
-}
 
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
+  .display-num {
+    font-size: clamp(2rem, 3.8vw, 3.25rem);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    /* Figures are drawn to a wider fit than caps; a touch of negative tracking
+       brings a long number back into line with the headings above it. */
+    letter-spacing: -0.02em;
   }
-}
 
-/* Children fade up in sequence -- makes a report feel composed, not dumped. */
-.stagger > * {
-  animation: riseIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-}
-.stagger > *:nth-child(1) { animation-delay: 0.02s; }
-.stagger > *:nth-child(2) { animation-delay: 0.06s; }
-.stagger > *:nth-child(3) { animation-delay: 0.1s; }
-.stagger > *:nth-child(4) { animation-delay: 0.14s; }
-.stagger > *:nth-child(5) { animation-delay: 0.18s; }
-.stagger > *:nth-child(6) { animation-delay: 0.22s; }
-
-@media (prefers-reduced-motion: reduce) {
-  .stagger > *,
-  [class*="animate-"] {
-    animation: none !important;
+  /* Labels, tags, eyebrows. Mono is the tell of this whole layout: it marks
+     small text as machine-written -- a field name, not a sentence. */
+  .eyebrow,
+  .label-mono {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10.5px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--viz-muted);
   }
-}
 
-/* Frosted panels over the map. Kept close to opaque on purpose: map tiles are
-   busy and high-contrast, and anything thinner made the text underneath hard to
-   read. The blur is what sells the effect, not the transparency. */
-.glass {
-  background: color-mix(in srgb, var(--viz-surface) 94%, transparent);
-  backdrop-filter: blur(24px) saturate(1.5);
-  -webkit-backdrop-filter: blur(24px) saturate(1.5);
-}
+  /* A hairline above a label, the way a print section opens. */
+  .eyebrow-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding-top: 1.125rem;
+    border-top: 1px solid var(--viz-hairline);
+  }
 
-.glass-strong {
-  background: color-mix(in srgb, var(--viz-surface) 98%, transparent);
-  backdrop-filter: blur(30px) saturate(1.7);
-  -webkit-backdrop-filter: blur(30px) saturate(1.7);
-}
+  /* Lead paragraph under a headline -- larger than body, still not a headline. */
+  .lede {
+    font-size: clamp(1rem, 1.4vw, 1.25rem);
+    line-height: 1.55;
+    font-weight: 350;
+    color: var(--viz-ink-2);
+  }
 
-/* Browsers without backdrop-filter would otherwise get a see-through card. */
-@supports not (backdrop-filter: blur(1px)) {
-  .glass,
+  /* ==========================================================================
+     Editorial furniture
+     ========================================================================== */
+
+  /* A section that stays on the ground but carries the accent glow behind it. */
+  .stage {
+    position: relative;
+    background: var(--viz-plane);
+  }
+
+  .band {
+    background: var(--viz-band);
+  }
+
+  /* Inverted section: the layout's punctuation. Tokens are re-pointed rather
+     than colours overridden, so anything nested keeps working unchanged. */
+  .inverted {
+    --viz-plane: #0a0a0a;
+    --viz-surface: #171717;
+    --viz-band: #141414;
+    --viz-ink: #ffffff;
+    --viz-ink-2: #b4b4b4;
+    --viz-muted: #8a8a8a;
+    --viz-grid: #262626;
+    --viz-axis: #333333;
+    --viz-border: rgba(255, 255, 255, 0.12);
+    --viz-hairline: rgba(255, 255, 255, 0.16);
+    background: var(--viz-plane);
+    color: var(--viz-ink);
+    color-scheme: dark;
+  }
+
+  /* Rows divided by hairlines instead of boxed into cards -- the dominant
+     pattern of the layout, and quieter than three cards in a row. */
+  .rule-row {
+    border-top: 1px solid var(--viz-hairline);
+  }
+
+  /* --------------------------------------------------------------------------
+     The accent tile
+     --------------------------------------------------------------------------
+     A solid square of flag cyan carrying black type. This is where the identity
+     lives now: not in gradients or tinted text, but in one saturated block per
+     row. Black on #00a1de is 6.74:1, so the flag's own hue can do the work.
+     -------------------------------------------------------------------------- */
+  .tile-accent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--lux-blue);
+    color: #0a0a0a;
+    font-family: var(--font-grotesk), system-ui, sans-serif;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The same block in flag red, for the one figure that needs to stop you. */
+  .tile-alert {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--lux-red);
+    color: #ffffff;
+    font-family: var(--font-grotesk), system-ui, sans-serif;
+    font-weight: 500;
+  }
+
+  /* Corner ticks: the blueprint framing this layout uses to say "measured".
+     Drawn with gradients on one element, so it costs no extra DOM. */
+  .ticked {
+    position: relative;
+  }
+
+  .ticked::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    border: 1px solid var(--viz-ink);
+    /* Intersecting the two masks leaves only the four corners visible, so one
+       element draws all four ticks -- no extra DOM, no eight gradients. */
+    --tick: 15px;
+    -webkit-mask:
+      linear-gradient(to right, #000 var(--tick), transparent var(--tick) calc(100% - var(--tick)), #000 calc(100% - var(--tick))),
+      linear-gradient(to bottom, #000 var(--tick), transparent var(--tick) calc(100% - var(--tick)), #000 calc(100% - var(--tick)));
+    -webkit-mask-composite: source-in;
+    mask:
+      linear-gradient(to right, #000 var(--tick), transparent var(--tick) calc(100% - var(--tick)), #000 calc(100% - var(--tick))),
+      linear-gradient(to bottom, #000 var(--tick), transparent var(--tick) calc(100% - var(--tick)), #000 calc(100% - var(--tick)));
+    mask-composite: intersect;
+  }
+
+  /* The glow: one soft organic shape in the flag hues, sitting behind the type.
+     Blurred hard enough that its outline never competes with a letterform. */
+  .glow {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(34px);
+    opacity: 0.72;
+    background:
+      radial-gradient(closest-side, color-mix(in srgb, var(--lux-blue) 92%, transparent), transparent),
+      radial-gradient(closest-side at 72% 68%, color-mix(in srgb, var(--lux-red) 70%, transparent), transparent);
+    border-radius: 62% 38% 45% 55% / 48% 56% 44% 52%;
+    animation: glowDrift 26s ease-in-out infinite alternate;
+  }
+
+  @keyframes glowDrift {
+    from {
+      transform: translate3d(0, 0, 0) scale(1);
+      border-radius: 62% 38% 45% 55% / 48% 56% 44% 52%;
+    }
+    to {
+      transform: translate3d(3%, -4%, 0) scale(1.07);
+      border-radius: 44% 56% 62% 38% / 58% 42% 55% 45%;
+    }
+  }
+
+  /* Text-link call to action: the arrow travels, the rule wipes in. */
+  .link-arrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--viz-ink);
+    padding-bottom: 2px;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: background-size 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .link-arrow svg {
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .link-arrow:hover {
+    background-size: 100% 1px;
+  }
+
+  .link-arrow:hover svg {
+    transform: translateX(4px);
+  }
+
+  /* Filled primary. One per screen. An 8px radius, not a capsule: next to
+     square blocks and uppercase type, a pill reads like a different website. */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--r-control);
+    background: var(--viz-ink);
+    color: var(--viz-plane);
+    font-weight: 500;
+    transition:
+      gap 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+      background 0.2s ease;
+  }
+
+  /* Hover slides towards the flag cyan rather than lightening the black -- the
+     accent stays the only colour that moves. */
+  .pill:hover {
+    gap: 0.875rem;
+    background: color-mix(in srgb, var(--viz-ink) 82%, var(--lux-blue));
+  }
+
+  /* Outlined secondary, on paper. */
+  .pill-quiet {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--r-control);
+    border: 1px solid var(--viz-hairline);
+    color: var(--viz-ink);
+    font-weight: 500;
+    transition:
+      border-color 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .pill-quiet:hover {
+    border-color: var(--viz-ink);
+    background: color-mix(in srgb, var(--viz-ink) 4%, transparent);
+  }
+
+  /* Sticky page header. Sits on the paper, declares itself with a hairline. */
+  .site-nav {
+    position: sticky;
+    top: 0;
+    z-index: 600;
+    background: color-mix(in srgb, var(--viz-plane) 82%, transparent);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    /* Once the page has moved, the header earns its rule. No scroll listener. */
+    .site-nav {
+      animation: navSettle linear both;
+      animation-timeline: scroll();
+      animation-range: 24px 96px;
+    }
+  }
+
+  @keyframes navSettle {
+    to {
+      border-bottom-color: var(--viz-hairline);
+      background: color-mix(in srgb, var(--viz-plane) 94%, transparent);
+    }
+  }
+
+  /* ==========================================================================
+     Surfaces
+     ========================================================================== */
+
+  /* Frosted panels over the map. Kept close to opaque on purpose: map tiles are
+     busy, and anything thinner made the text underneath hard to read. */
+  .glass {
+    background: color-mix(in srgb, var(--viz-surface) 90%, transparent);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  }
+
   .glass-strong {
-    background: var(--viz-surface);
+    background: color-mix(in srgb, var(--viz-surface) 97%, transparent);
+    backdrop-filter: blur(30px) saturate(1.6);
+    -webkit-backdrop-filter: blur(30px) saturate(1.6);
   }
+
+  /* Browsers without backdrop-filter would otherwise get a see-through card. */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass,
+    .glass-strong {
+      background: var(--viz-surface);
+    }
+  }
+
+  /* A hairline that reads as an edge, not as a drawn box. Shadows are lighter
+     than they were: on paper, a heavy shadow reads as a sticker. */
+  .ring-hairline {
+    box-shadow:
+      0 0 0 1px var(--viz-border),
+      0 1px 2px rgb(10 10 10 / 0.03),
+      0 10px 26px -18px rgb(10 10 10 / 0.12);
+  }
+
+  .ring-hairline-lg {
+    box-shadow:
+      0 0 0 1px var(--viz-border),
+      0 2px 6px rgb(10 10 10 / 0.04),
+      0 30px 70px -28px rgb(10 10 10 / 0.22);
+  }
+
+  /* Slim scrollbars so the panel does not grow a chunky native gutter. */
+  .thin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--viz-axis) transparent;
+  }
+  .thin-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .thin-scroll::-webkit-scrollbar-thumb {
+    background: var(--viz-axis);
+    border-radius: 99px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .thin-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Segmented control -- replaces native selects, which never look designed. */
+  .segment {
+    position: relative;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: var(--r-control);
+    background: color-mix(in srgb, var(--viz-ink) 6%, transparent);
+  }
+
+  .segment button {
+    flex: 1;
+    border-radius: 5px;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--viz-ink-2);
+    transition:
+      background 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .segment button:hover:not([data-on="true"]) {
+    color: var(--viz-ink);
+    background: color-mix(in srgb, var(--viz-ink) 4%, transparent);
+  }
+
+  .segment button[data-on="true"] {
+    background: var(--viz-surface);
+    color: var(--viz-ink);
+    box-shadow:
+      0 0 0 1px var(--viz-border),
+      0 1px 3px rgb(10 10 10 / 0.08);
+  }
+
+  /* ==========================================================================
+     Motion
+     ========================================================================== */
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes riseIn {
+    from {
+      transform: translateY(8px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Children fade up in sequence -- makes a report feel composed, not dumped. */
+  .stagger > * {
+    animation: riseIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0.02s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.06s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.1s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.14s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.18s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.22s; }
+
+  /* Scroll reveal. Transform + opacity only, so it stays on the compositor. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+      opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  .reveal[data-shown="true"] {
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+  }
+
+  /* Constellation: the border draws, then the counters land. */
+  @keyframes ccDraw {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  @keyframes ccDot {
+    from { opacity: 0; transform: scale(0.2); }
+    to { opacity: inherit; transform: scale(1); }
+  }
+
+  .cc-outline {
+    stroke-dasharray: 1;
+    animation: ccDraw 2.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  }
+
+  .cc-dots circle {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ccDot 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  /* Rhythm curve: baseline first, then the two lines race across together. */
+  @keyframes rcDraw {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* pathLength=1, so the dash values below are fractions of the whole line. */
+  @keyframes rcDrawDashed {
+    from { stroke-dasharray: 1; stroke-dashoffset: 1; }
+    70% { stroke-dasharray: 1; stroke-dashoffset: 0; }
+    to { stroke-dasharray: 0.011 0.0075; stroke-dashoffset: 0; }
+  }
+
+  @keyframes rcFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .rc-typical,
+  .rc-line {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  [data-shown="true"] .rc-typical {
+    animation: rcDrawDashed 2.1s ease-out 0.1s forwards;
+  }
+  [data-shown="true"] .rc-actual {
+    animation: rcDraw 2s cubic-bezier(0.5, 0, 0.2, 1) 0.35s forwards;
+  }
+  [data-shown="true"] .rc-pred {
+    animation: rcDraw 2s cubic-bezier(0.5, 0, 0.2, 1) 0.5s forwards;
+  }
+  .rc-area {
+    opacity: 0;
+  }
+  [data-shown="true"] .rc-area {
+    animation: rcFade 1.2s ease-out 1.4s forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stagger > *,
+    [class*="animate-"] {
+      animation: none !important;
+    }
+    .reveal {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+    .cc-outline,
+    .cc-dots circle,
+    .rc-typical,
+    .rc-line,
+    .rc-area {
+      animation: none !important;
+      stroke-dashoffset: 0 !important;
+      opacity: 1 !important;
+    }
+    .link-arrow,
+    .link-arrow svg,
+    .pill {
+      transition: none !important;
+    }
+    .glow {
+      animation: none !important;
+    }
+  }
+
 }
 
-/* A hairline that reads as depth rather than as a drawn box. */
-.ring-hairline {
-  box-shadow:
-    0 0 0 1px var(--viz-border),
-    0 1px 2px rgb(0 0 0 / 0.04),
-    0 8px 24px -12px rgb(0 0 0 / 0.14);
-}
-
-.ring-hairline-lg {
-  box-shadow:
-    0 0 0 1px var(--viz-border),
-    0 2px 6px rgb(0 0 0 / 0.05),
-    0 24px 60px -20px rgb(0 0 0 / 0.28);
-}
-
-/* Brand mark / accent sweep, built from the validated series hues. */
-.accent-sweep {
-  background: linear-gradient(
-    100deg,
-    var(--viz-series) 0%,
-    color-mix(in srgb, var(--viz-series) 55%, var(--viz-actual)) 55%,
-    var(--viz-actual) 100%
-  );
-}
-
-.text-sweep {
-  background: linear-gradient(
-    100deg,
-    var(--viz-ink) 0%,
-    color-mix(in srgb, var(--viz-ink) 72%, var(--viz-series)) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Slim scrollbars so the sidebar does not grow a chunky native gutter. */
-.thin-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: var(--viz-axis) transparent;
-}
-.thin-scroll::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.thin-scroll::-webkit-scrollbar-thumb {
-  background: var(--viz-axis);
-  border-radius: 99px;
-  border: 2px solid transparent;
-  background-clip: content-box;
-}
-.thin-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* Segmented control -- replaces native selects, which never look designed. */
-.segment {
-  position: relative;
-  display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--viz-ink) 6%, transparent);
-}
-
-.segment button {
-  flex: 1;
-  border-radius: 7px;
-  padding: 6px 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--viz-ink-2);
-  transition:
-    background 0.18s ease,
-    color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.segment button:hover:not([data-on="true"]) {
-  color: var(--viz-ink);
-  background: color-mix(in srgb, var(--viz-ink) 4%, transparent);
-}
-
-.segment button[data-on="true"] {
-  background: var(--viz-surface);
-  color: var(--viz-ink);
-  box-shadow:
-    0 0 0 1px var(--viz-border),
-    0 1px 3px rgb(0 0 0 / 0.1);
-}
-
-/* Leaflet ships its own light-only chrome; bring it onto the tokens. */
+/* ==========================================================================
+   Map -- leaflet, brought onto the tokens
+   ========================================================================== */
 .leaflet-container {
   font-family: inherit;
   background: var(--viz-plane);
+}
+
+/* OSM's default tiles are saturated enough to fight the pins and the paper.
+   Draining them turns the basemap back into a backdrop -- and costs one line,
+   rather than a third-party tile provider and its attribution. */
+.leaflet-tile-pane {
+  filter: saturate(0.2) sepia(0.1) brightness(1.06) contrast(0.9);
 }
 
 .leaflet-tooltip {
   background: var(--viz-surface);
   color: var(--viz-ink);
   border: 1px solid var(--viz-border);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 0.12);
-  padding: 6px 9px;
+  border-radius: 0;
+  box-shadow: 0 6px 18px -6px rgb(10 10 10 / 0.18);
+  padding: 7px 10px;
 }
 
 .leaflet-tooltip-top::before {
@@ -272,7 +688,7 @@ button:disabled {
 }
 
 .leaflet-control-attribution {
-  background: color-mix(in srgb, var(--viz-surface) 88%, transparent) !important;
+  background: color-mix(in srgb, var(--viz-surface) 86%, transparent) !important;
   color: var(--viz-muted) !important;
   font-size: 10px;
 }
@@ -284,15 +700,15 @@ button:disabled {
 /* Zoom buttons -- moved to top-right, restyled off leaflet's 1990s chrome. */
 .leaflet-bar {
   border: none !important;
-  border-radius: 12px !important;
+  border-radius: var(--r-control) !important;
   overflow: hidden;
   box-shadow:
     0 0 0 1px var(--viz-border),
-    0 2px 10px rgb(0 0 0 / 0.12) !important;
+    0 4px 14px -6px rgb(10 10 10 / 0.16) !important;
 }
 
 .leaflet-bar a {
-  background: color-mix(in srgb, var(--viz-surface) 94%, transparent);
+  background: color-mix(in srgb, var(--viz-surface) 92%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   color: var(--viz-ink);
@@ -322,10 +738,10 @@ button:disabled {
      so no stray text-node alignment can shift it left. */
   box-sizing: border-box;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--viz-series) 90%, transparent);
+  background: color-mix(in srgb, var(--viz-series) 92%, transparent);
   box-shadow:
-    0 0 0 4px color-mix(in srgb, var(--viz-series) 20%, transparent),
-    0 2px 10px rgb(0 0 0 / 0.22);
+    0 0 0 4px color-mix(in srgb, var(--viz-series) 16%, transparent),
+    0 4px 14px -4px rgb(10 10 10 / 0.28);
   transition: transform 0.16s ease;
   cursor: pointer;
 }
@@ -375,234 +791,44 @@ button:disabled {
   filter: drop-shadow(0 0 7px color-mix(in srgb, var(--viz-actual) 65%, transparent));
 }
 
-/* Dark mode ships map tiles that would otherwise glare white. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .leaflet-tile-pane {
-    filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
-  }
-}
-
-:root[data-theme="dark"] .leaflet-tile-pane {
-  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
-}
-
-/* ==========================================================================
-   Landing page motion
-   ========================================================================== */
-
-/* Scroll reveal. Transform + opacity only, so it stays on the compositor. */
-.reveal {
-  opacity: 0;
-  transform: translateY(22px);
-  transition:
-    opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform;
-}
-
-.reveal[data-shown="true"] {
-  opacity: 1;
-  transform: none;
-  will-change: auto;
-}
-
-/* Constellation: the border draws, then the counters land. */
-@keyframes ccDraw {
-  from { stroke-dashoffset: 1; }
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes ccDot {
-  from { opacity: 0; transform: scale(0.2); }
-  to { opacity: inherit; transform: scale(1); }
-}
-
-.cc-outline {
-  stroke-dasharray: 1;
-  animation: ccDraw 2.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-
-.cc-dots circle {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: ccDot 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-}
-
-/* Rhythm curve: baseline first, then the two lines race across together. */
-@keyframes rcDraw {
-  from { stroke-dashoffset: 1; }
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes rcFade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.rc-typical,
-.rc-line {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-}
-
-[data-shown="true"] .rc-typical {
-  animation: rcDraw 1.6s ease-out 0.1s forwards;
-}
-[data-shown="true"] .rc-actual {
-  animation: rcDraw 2s cubic-bezier(0.5, 0, 0.2, 1) 0.35s forwards;
-}
-[data-shown="true"] .rc-pred {
-  animation: rcDraw 2s cubic-bezier(0.5, 0, 0.2, 1) 0.5s forwards;
-}
-.rc-area {
-  opacity: 0;
-}
-[data-shown="true"] .rc-area {
-  animation: rcFade 1.2s ease-out 1.4s forwards;
-}
-
-/* Fluid display type -- one scale used across the landing page. */
-.display-xl {
-  font-size: clamp(2.75rem, 7.2vw, 6rem);
-  line-height: 0.96;
-  letter-spacing: -0.035em;
-  font-weight: 600;
-}
-
-.display-lg {
-  font-size: clamp(1.9rem, 4.4vw, 3.4rem);
-  line-height: 1.04;
-  letter-spacing: -0.03em;
-  font-weight: 600;
-}
-
-.display-num {
-  font-size: clamp(2.4rem, 6vw, 4.6rem);
-  line-height: 0.92;
-  letter-spacing: -0.04em;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--viz-muted);
-}
-
-/* A dark stage for the hero, independent of the page theme. */
-.stage {
-  --viz-surface: #16161a;
-  --viz-plane: #0b0b0d;
-  --viz-ink: #ffffff;
-  --viz-ink-2: #b9b8b2;
-  --viz-muted: #85847e;
-  --viz-grid: #26262a;
-  --viz-axis: #35353a;
-  --viz-border: rgba(255, 255, 255, 0.11);
-  --viz-series: #4a90e8;
-  --viz-actual: #ee7442;
-  --viz-baseline: #85847e;
-  color-scheme: dark;
-  background: var(--viz-plane);
-  color: var(--viz-ink);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reveal {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
-  .cc-outline,
-  .cc-dots circle,
-  .rc-typical,
-  .rc-line,
-  .rc-area {
-    animation: none !important;
-    stroke-dashoffset: 0 !important;
-    opacity: 1 !important;
-  }
-}
-
 /* ==========================================================================
    Luxembourg national colours -- BRAND layer only
    ==========================================================================
-   The flag is red / white / light-blue. These are used for identity: stripes,
-   gradients, glows, selection. They are deliberately NOT used for data marks:
+   The flag is red / white / light-blue. These carry identity: stripes,
+   gradients, washes, selection. They are deliberately NOT used for data marks:
 
-   - Flag cyan #00A1DE scores 2.86:1 on the light chart surface, under the 3:1
-     floor a data line must clear.
+   - Flag cyan #00A1DE scores 2.86:1 on the chart surface, under the 3:1 floor
+     a data line must clear.
    - Every cyan-leaning step dark enough to pass then fell to normal-vision
-     dE 13.5-14.5 against the gray baseline, under the floor of 15 -- readers
-     with full colour vision could not separate the prediction from the
-     "usual day" line.
+     dE 13.5-14.5 against the gray baseline -- readers with full colour vision
+     could not separate the prediction from the "usual day" line.
    - Flag red also collides with --status-bad, and a status hue must never
      double as a series colour.
 
-   So the validated blue/orange palette still owns the charts.
+   So the validated blue/orange palette owns the charts, and the flag owns the
+   identity -- as solid accent tiles (.tile-accent / .tile-alert), the hero glow
+   and the panel rule, never as a tint behind a data mark. Black on flag cyan is
+   6.74:1; white on flag red is 4.22:1, which is why red tiles carry only short
+   uppercase labels and never body copy.
    ========================================================================== */
 :root {
   --lux-red: #ed2939;    /* true flag red -- decorative only */
   --lux-white: #ffffff;
   --lux-blue: #00a1de;   /* true flag cyan -- decorative only */
 
-  /* Text-safe steps: white type clears AA on both (4.82:1 and 6.02:1). */
-  --lux-red-ink: #e01b2b;
-  --lux-blue-ink: #00699a;
+  --lux-red-ink: #c4121f;
+  --lux-blue-ink: #005d8a;
 }
 
-/* On the dark stage the true flag hues read cleanly, so they carry text there. */
-.stage {
-  --lux-red-ink: #f04452;
-  --lux-blue-ink: #33b4e5;
-}
+@layer components {
+  /* The tricolour needs a ground darker than its own white band. On a white card
+     it reads as "red, gap, blue", so surfaces use a two-stop sweep of the
+     text-safe steps instead -- same identity, no hole in the middle. */
+  .lux-rule {
+    background: linear-gradient(90deg, var(--lux-red-ink), var(--lux-blue-ink));
+  }
 
-/* The flag itself, as a rule. Used on card top edges and panel headers. */
-.lux-stripe {
-  background: linear-gradient(
-    90deg,
-    var(--lux-red) 0 33.33%,
-    var(--lux-white) 33.33% 66.66%,
-    var(--lux-blue) 66.66% 100%
-  );
-}
-
-/* Vertical variant, for the left edge of the verdict card. */
-.lux-stripe-y {
-  background: linear-gradient(
-    180deg,
-    var(--lux-red) 0 33.33%,
-    var(--lux-white) 33.33% 66.66%,
-    var(--lux-blue) 66.66% 100%
-  );
-}
-
-/* Buttons and filled surfaces: flag-derived, but stepped so white type is
-   legible across the whole sweep -- a true tricolour would put white text on
-   a white band. */
-.accent-sweep {
-  background: linear-gradient(
-    100deg,
-    var(--lux-red-ink) 0%,
-    color-mix(in srgb, var(--lux-red-ink) 45%, var(--lux-blue-ink)) 52%,
-    var(--lux-blue-ink) 100%
-  );
-}
-
-.text-sweep {
-  background: linear-gradient(
-    100deg,
-    var(--lux-red-ink) 0%,
-    var(--lux-blue-ink) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-::selection {
-  background: color-mix(in srgb, var(--lux-blue) 30%, transparent);
+  .lux-rule-y {
+    background: linear-gradient(180deg, var(--lux-red-ink), var(--lux-blue-ink));
+  }
 }

@@ -13,6 +13,7 @@ import {
   vehicleLabel,
 } from "../lib/constants";
 import RecordedDataNote from "./RecordedDataNote";
+import type { RecordedRange } from "../hooks/useRecordedDays";
 
 /**
  * Date, direction, vehicle, and the button that asks for the forecast.
@@ -47,7 +48,7 @@ export default function ForecastControls({
   recorded: {
     loaded: boolean;
     hasDay: (date: string) => boolean;
-    range: { first: string; last: string; n: number } | null;
+    range: RecordedRange | null;
   };
   loading: boolean;
   onRun: () => void;

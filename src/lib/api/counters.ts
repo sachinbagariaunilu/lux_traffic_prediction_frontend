@@ -4,7 +4,7 @@ import { getJson } from "./client";
 
 /**
  * Fetch every series and collapse them onto physical locations.
- * /counters returns ~1058 series across ~270 distinct poste_ids, so a pin per
+ * /counters returns 1054 series across 269 distinct poste_ids, so a pin per
  * series would stack four markers on the same pixel.
  */
 export async function fetchSites(): Promise<CounterSite[]> {

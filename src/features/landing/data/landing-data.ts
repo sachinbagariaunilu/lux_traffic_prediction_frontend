@@ -288,23 +288,37 @@ export const COUNTERS: [number, number, number][] = [
 ];
 
 export const RHYTHM = {
-  date: "2025-06-18",
-  counter: "A3 — Bettembourg",
+  date: "2025-02-13",
+  counter: "A1 — Findel",
+  // Pulled 2026-09-03 from the SHIPPED 14-feature model via the live API. The
+  // previous arrays came from the old 12-feature bundle and matched nothing the
+  // site serves.
+  //
+  // This day is chosen because it is accurate on BOTH measures -- +0.5% on the
+  // daily total AND 3.0% hour by hour. That pairing matters. The day this
+  // section used before showed 0.1% on the total while being 251 veh/h out
+  // hour by hour: it ran 2,118 under through the morning and 2,901 over
+  // through the afternoon, and the two cancelled. A daily total alone cannot
+  // tell an accurate forecast from two large errors pointing opposite ways,
+  // which is why hourlyMae is quoted alongside it.
   actual: [
-    212, 178, 187, 468, 1047, 2896, 2941, 2511, 2336, 1845, 1858, 2040, 2096,
-    2011, 1695, 1713, 1441, 1313, 1389, 1097, 975, 933, 620, 462,
+    89, 67, 52, 64, 141, 809, 2404, 3042, 2909, 1737, 1131, 1056,
+    1094, 1179, 1154, 989, 1076, 1074, 943, 628, 436, 415, 336, 186,
   ],
   predicted: [
-    250, 182, 216, 438, 940, 2463, 2619, 1807, 1648, 1874, 1866, 1737, 1861,
-    2002, 2310, 2172, 2105, 1964, 1901, 1130, 958, 921, 536, 406,
+    89, 51, 50, 88, 178, 825, 2421, 2974, 2777, 1766, 1141, 1132,
+    1133, 1177, 1134, 1084, 1082, 1082, 905, 634, 443, 412, 353, 200,
   ],
   typical: [
-    250, 185, 215, 432, 911, 2498, 2498, 1992, 1720, 1857, 1917, 1825, 1841,
-    2011, 1674, 1557, 1520, 1463, 1319, 1072, 950, 897, 548, 408,
+    96, 55, 51, 89, 176, 829, 2326, 2927, 2767, 1712, 1143, 1122,
+    1124, 1201, 1123, 1068, 1047, 1042, 915, 631, 453, 413, 353, 202,
   ],
-  actualTotal: 34264,
-  predictedTotal: 34308,
-  typicalTotal: 31559,
-  peakHour: 6,
-  peakValue: 2941,
+  actualTotal: 23011,
+  predictedTotal: 23131,
+  typicalTotal: 22865,
+  peakHour: 7,
+  peakValue: 3042,
+  /** Mean absolute error across the 24 hours -- the honest figure for a chart
+   *  of hourly data, and the guard against a flattering cancellation. */
+  hourlyMae: 28,
 } as const;

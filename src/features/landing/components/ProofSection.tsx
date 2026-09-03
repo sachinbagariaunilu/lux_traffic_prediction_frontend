@@ -22,9 +22,11 @@ export default function ProofSection() {
       }
       lede={
         <>
-          A Wednesday on the A3 at Bettembourg. The model had never seen this day — it
-          was trained six months earlier and reads only the calendar. Blue is what it
-          predicted; orange is what the road recorded.
+          A Thursday on the A1 at Findel. The model had never seen this day — it was
+          trained the year before and reads only the calendar. Blue is what it
+          predicted; orange is what the road recorded, and it tracked the shape to{" "}
+          {RHYTHM.hourlyMae} vehicles an hour. This is a good day, not an average one:
+          across all 1,054 series the model is out by ±13.8 an hour.
         </>
       }
     >

@@ -26,15 +26,15 @@ export const EVIDENCE: readonly {
     note: "every hour of 2024, at every counter that reported",
   },
   {
-    value: 270,
+    value: 269,
     decimals: 0,
     suffix: "",
     label: "road counters",
-    note: "permanent stations, nationwide",
+    note: "forecast and scored against recorded counts",
     accent: true,
   },
   {
-    value: 1058,
+    value: 1054,
     decimals: 0,
     suffix: "",
     label: "measured series",

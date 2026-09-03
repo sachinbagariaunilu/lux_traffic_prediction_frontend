@@ -1,7 +1,14 @@
 import { COUNTERS, LUX_OUTLINE, VIEW } from "../data/landing-data";
 
 /**
- * The signature graphic: Luxembourg's border with all 270 real counters
+ * NOTE the count here is 270 while the rest of the site says 269, and that is
+ * correct rather than a typo. 270 counters exist in the 2024 network and this
+ * draws all their true positions. The API serves 269, because counter 474
+ * recorded nothing in 2025 and so has no actuals to be scored against -- see
+ * the backend's COUNTER_MANIFEST.md. Product copy states what is SERVED; this
+ * graphic states what EXISTS.
+ *
+ * The signature graphic: Luxembourg's border with the 270 real 2024 counters
  * plotted inside it. Border and dots share one projection, so each point sits
  * exactly where that counter physically stands -- this is the dataset drawing
  * itself, not an illustration of it.
@@ -22,7 +29,7 @@ export default function CounterConstellation({
       viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
       className={className}
       role="img"
-      aria-label="Map of Luxembourg showing the positions of all 270 traffic counters"
+      aria-label="Map of Luxembourg showing the positions of the traffic counter network"
     >
       <defs>
         <linearGradient id="cc-fill" x1="0" y1="0" x2="0.6" y2="1">

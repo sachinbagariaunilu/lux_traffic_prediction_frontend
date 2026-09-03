@@ -26,7 +26,7 @@ export default function ClosingSection() {
         </Reveal>
         <Reveal delay={140}>
           <p className="lede mt-8 max-w-[48ch]">
-            270 counters on the map. Choose a date, a direction and a vehicle type, and
+            269 counters on the map. Choose a date, a direction and a vehicle type, and
             see how the forecast held up — hour by hour.
           </p>
         </Reveal>

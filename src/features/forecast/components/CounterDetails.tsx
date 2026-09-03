@@ -7,7 +7,7 @@ import { DAYS_IN_YEAR, TRAINED_THROUGH, vehicleLabel } from "../lib/constants";
 /**
  * Every field /counters carries for the chosen series, plus what the model says
  * about itself -- nothing withheld. `expected_error` is labelled "stated error"
- * deliberately: it is one global constant across all 1,058 series, not this
+ * deliberately: it is one global constant across all 1,054 series, not this
  * counter's measured accuracy.
  */
 export default function CounterDetails({

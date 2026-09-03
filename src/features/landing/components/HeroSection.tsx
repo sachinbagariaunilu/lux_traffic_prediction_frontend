@@ -33,7 +33,7 @@ export default function HeroSection() {
 
           <Reveal delay={180}>
             <p className="lede mt-9 max-w-[48ch]">
-              270 counters across Luxembourg, every hour of 2024. From them, an
+              269 counters across Luxembourg, every hour of 2024. From them, an
               hour-by-hour forecast of 2025 — shown next to what the road actually
               recorded, so you can mark it yourself.
             </p>
@@ -42,7 +42,7 @@ export default function HeroSection() {
           <Reveal delay={260}>
             <div className="mt-11 flex flex-wrap items-center gap-x-8 gap-y-4">
               <Link href="/map" className="pill px-6 py-3.5 text-[13px]">
-                Explore 270 counters
+                Explore 269 counters
                 <ArrowRightIcon />
               </Link>
               <a href="#proof" className="link-arrow text-[13px]">
@@ -56,7 +56,7 @@ export default function HeroSection() {
         <div className="ticked relative mx-auto w-full max-w-[320px] p-4 lg:max-w-none">
           <CounterConstellation className="h-auto w-full" />
           <p className="label-mono mt-4 text-center lg:text-left">
-            270 counters · true positions
+            269 counters · true positions
           </p>
         </div>
       </div>

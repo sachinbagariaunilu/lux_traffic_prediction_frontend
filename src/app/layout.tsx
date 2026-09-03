@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     template: "%s · Traffic Forecasting",
   },
   description:
-    "Hourly 2025 traffic forecasts for 270 Luxembourg road counters, shown against what the road actually recorded.",
+    "Hourly 2025 to 2029 traffic forecasts for 269 Luxembourg road counters, shown against what the road actually recorded.",
   applicationName: "Traffic Forecasting",
   keywords: [
     "Luxembourg",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Traffic Forecasting · Luxembourg",
     description:
-      "Hourly 2025 traffic forecasts for 270 Luxembourg road counters, checked against recorded counts.",
+      "Hourly 2025 to 2029 traffic forecasts for 269 Luxembourg road counters, checked against recorded counts.",
     type: "website",
     locale: "en_GB",
   },

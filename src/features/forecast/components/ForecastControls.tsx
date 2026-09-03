@@ -4,7 +4,14 @@ import Segmented from "@/components/ui/Segmented";
 import Spinner from "@/components/ui/Spinner";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import type { CounterSite, VehiculeCode } from "@/lib/types";
-import { COVERAGE_FIRST, COVERAGE_LAST, clampDate, vehicleLabel } from "../lib/constants";
+import {
+  COVERAGE_FIRST,
+  COVERAGE_LABEL,
+  COVERAGE_LAST,
+  clampDate,
+  isProjection,
+  vehicleLabel,
+} from "../lib/constants";
 import RecordedDataNote from "./RecordedDataNote";
 
 /**
@@ -51,10 +58,10 @@ export default function ForecastControls({
         <div className="col-span-2">
           <label className="block">
             {/* The range is stated, not just enforced -- a picker that refuses
-                2026 without saying why reads as broken. */}
+                2028 without saying why reads as broken. */}
             <span className="label-mono mb-2 flex items-baseline justify-between gap-2">
               <span>Date to forecast</span>
-              <span className="text-[var(--viz-muted)]">2025 only</span>
+              <span className="text-[var(--viz-muted)]">{COVERAGE_LABEL}</span>
             </span>
             <input
               type="date"
@@ -65,8 +72,15 @@ export default function ForecastControls({
               className="w-full rounded-[var(--r-control)] border border-[var(--viz-hairline)] bg-[var(--viz-plane)] px-3.5 py-3 text-sm text-[var(--viz-ink)] outline-none transition focus:border-[var(--viz-series)] focus:bg-[var(--viz-surface)] focus:ring-4 focus:ring-[var(--viz-series)]/12"
             />
           </label>
-          {recorded.loaded && (
-            <RecordedDataNote hasData={recorded.hasDay(date)} range={recorded.range} />
+          {/* A projection needs no actuals file to be known unscoreable, so it
+              says so immediately instead of waiting on a fetch that cannot
+              change the answer. */}
+          {(isProjection(date) || recorded.loaded) && (
+            <RecordedDataNote
+              hasData={recorded.hasDay(date)}
+              projection={isProjection(date)}
+              range={recorded.range}
+            />
           )}
         </div>
 

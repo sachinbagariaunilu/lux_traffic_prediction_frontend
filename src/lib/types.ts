@@ -16,9 +16,17 @@ export interface CounterSeries {
   coord_x: number;
   coord_y: number;
   avg_per_hour: number;
+  /** Days this series reported in 2024, the training year. */
   days_reported: number;
   first_day: string;
   last_day: string;
+  /**
+   * Days this series recorded in 2025 -- the year the forecast is scored
+   * against. /counters only returns series present in BOTH years, so this is
+   * always >= 1; `thin` marks the few with very little to score against.
+   */
+  recorded_days_2025: number;
+  thin: boolean;
 }
 
 export interface CountersResponse {

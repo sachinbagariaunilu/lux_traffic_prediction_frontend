@@ -40,7 +40,7 @@ export default function ExplorerHeader({
               Traffic Forecasting
             </h1>
             <p className="label-mono mt-1.5">
-              LU · 2025 forecasts vs recorded counts
+              LU · 2025 scored vs recorded · 2026–27 projected
             </p>
           </div>
         </div>

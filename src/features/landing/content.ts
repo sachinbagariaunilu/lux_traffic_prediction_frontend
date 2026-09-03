@@ -60,7 +60,7 @@ export const STEPS = [
   {
     n: "02",
     title: "Predict any date",
-    body: "Name a date, a counter, a direction and a vehicle type; get back 24 hourly numbers. It reads only the calendar — no live feed, no recent measurements — so next Tuesday and a Tuesday in 2029 cost the same.",
+    body: "Name a date, a counter, a direction and a vehicle type; get back 24 hourly numbers. It reads only the calendar — no live feed, no recent measurements — so a Tuesday last year and a Tuesday in 2029 cost the same.",
     footnote: "Forecast model · no lag features",
   },
   {
@@ -97,11 +97,11 @@ export const CHART_LINES = [
 export const LIMITS = [
   {
     title: "The error figure is an average",
-    body: "±18 vehicles/hour spans all 1,058 series, and most are quiet rural counters. On a motorway counter the real error is far larger — we measured ±77/h on one busy day.",
+    body: "±13.8 vehicles/hour spans all 1,054 series, and most are quiet rural counters. On a motorway counter the real error is far larger — the busiest fifth averages ±39/h.",
   },
   {
     title: "Reality stops at 2025",
-    body: "Those are the years we hold recorded counts for. Ask for any other date and you get a forecast with nothing to check it against.",
+    body: "2024 and 2025 are the years we hold recorded counts for. Dates through 2029 still forecast — they read those years' real calendars, holidays and all — but they carry 2024 traffic levels with no trend term, and nothing exists to check them against. The further out the date, the more that matters.",
   },
   {
     title: "The baseline ignores season",

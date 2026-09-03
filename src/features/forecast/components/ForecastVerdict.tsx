@@ -12,11 +12,14 @@ export default function ForecastVerdict({
   predicted,
   actual,
   typical,
+  projection,
 }: {
   dayName: string;
   predicted: number;
   actual: number | null;
   typical: number;
+  /** Date past the recorded window -- unscoreable because it has not happened. */
+  projection: boolean;
 }) {
   const basis = actual ?? predicted;
   const vsUsual = typical > 0 ? (basis / typical - 1) * 100 : 0;
@@ -59,7 +62,10 @@ export default function ForecastVerdict({
               <strong className="font-semibold text-[var(--viz-series)]">
                 {formatCount(predicted)}
               </strong>{" "}
-              vehicles. Nothing was recorded on this date, so there is no way to check it.
+              vehicles.{" "}
+              {projection
+                ? "This date has not happened yet, so there is nothing to check it against."
+                : "Nothing was recorded on this date, so there is no way to check it."}
             </>
           )}{" "}
           A usual {dayName} here sees about{" "}

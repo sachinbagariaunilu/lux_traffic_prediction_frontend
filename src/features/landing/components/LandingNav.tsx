@@ -22,7 +22,7 @@ export default function LandingNav() {
         <span className="whitespace-nowrap font-[family-name:var(--font-grotesk)] text-[13.5px] font-medium uppercase tracking-[0.01em] sm:text-[15px]">
           Traffic Forecasting
         </span>
-        <span className="label-mono ml-2 hidden sm:block">LU · 2024 → 2025</span>
+        <span className="label-mono ml-2 hidden sm:block">LU · 2024 → 2029</span>
         <Link
           href="/map"
           className="pill ml-auto whitespace-nowrap px-4 py-2.5 text-[12.5px] sm:px-5"

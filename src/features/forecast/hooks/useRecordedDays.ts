@@ -24,17 +24,28 @@ export type RecordedRange = {
  * The counter's recorded days, pulled as soon as the panel opens (cached,
  * ~90 KB) so the date field can say up front whether a real comparison is
  * possible -- rather than making the user run a forecast to find out.
+ *
+ * `enabled` is false on the forecasting page, where every offered date is past
+ * the counts we hold. Fetching there would spend ~37 KB per counter to learn
+ * something the page already states, so the request is not made and `loaded`
+ * stays false -- which is what keeps RecordedDataNote from rendering.
  */
-export function useRecordedDays(poste_id: number, direction: number, vehicule: string) {
+export function useRecordedDays(
+  poste_id: number,
+  direction: number,
+  vehicule: string,
+  enabled: boolean,
+) {
   const [file, setFile] = useState<ActualsFile | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     let live = true;
     fetchActuals(poste_id).then((a) => live && setFile(a));
     return () => {
       live = false;
     };
-  }, [poste_id]);
+  }, [poste_id, enabled]);
 
   const days = file?.series?.[`${direction}-${vehicule}`];
 

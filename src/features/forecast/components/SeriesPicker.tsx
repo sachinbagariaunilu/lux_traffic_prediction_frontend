@@ -3,6 +3,7 @@
 import { formatCount } from "@/lib/format";
 import type { CounterSite, VehiculeCode } from "@/lib/types";
 import { vehicleLabel } from "../lib/constants";
+import type { Product } from "../lib/products";
 
 /**
  * Shown while nothing has been forecast yet: what this counter actually
@@ -10,11 +11,13 @@ import { vehicleLabel } from "../lib/constants";
  * describe the counter, not guess a forecast nobody asked for.
  */
 export default function SeriesPicker({
+  product,
   site,
   direction,
   vehicule,
   onSelect,
 }: {
+  product: Product;
   site: CounterSite;
   direction: number;
   vehicule: VehiculeCode;
@@ -78,10 +81,28 @@ export default function SeriesPicker({
       </ul>
 
       <div className="border border-dashed border-[var(--viz-axis)] px-4 py-5 text-center">
+        {/* What the button will actually give you, which is not the same thing
+            on the two pages: one produces a marked answer, the other a
+            forecast with nothing to mark it against. */}
         <p className="text-[11px] leading-relaxed text-[var(--viz-ink-2)]">
-          Pick a date and press{" "}
-          <strong className="font-semibold text-[var(--viz-ink)]">Run forecast</strong> to
-          see the prediction against what really happened.
+          {product.scoreable ? (
+            <>
+              Pick a day in {product.firstDate.slice(0, 4)} and press{" "}
+              <strong className="font-semibold text-[var(--viz-ink)]">
+                Run and check it
+              </strong>{" "}
+              to see the prediction against what really happened.
+            </>
+          ) : (
+            <>
+              Pick a date between {product.firstDate.slice(0, 4)} and{" "}
+              {product.lastDate.slice(0, 4)} and press{" "}
+              <strong className="font-semibold text-[var(--viz-ink)]">
+                Run forecast
+              </strong>{" "}
+              to see the hourly shape of that day.
+            </>
+          )}
         </p>
       </div>
     </div>

@@ -22,11 +22,11 @@ export default function ProofSection() {
       }
       lede={
         <>
-          A Thursday on the A1 at Findel. The model had never seen this day — it was
-          trained the year before and reads only the calendar. Blue is what it
-          predicted; orange is what the road recorded, and it tracked the shape to{" "}
-          {RHYTHM.hourlyMae} vehicles an hour. This is a good day, not an average one:
-          across all 1,054 series the model is out by ±13.8 an hour.
+          A Thursday on the A1 at Findel, from the Check 2025 page. The model had never
+          seen this day — it was trained on 2024 alone and reads only the calendar. Blue
+          is what it predicted; orange is what the road recorded, and it tracked the
+          shape to {RHYTHM.hourlyMae} vehicles an hour. This is a good day, not an
+          average one: across all 1,054 scoreable series it is out by ±13.0 an hour.
         </>
       }
     >
@@ -59,8 +59,8 @@ export default function ProofSection() {
       <Reveal delay={120}>
         <p className="mt-8 max-w-[64ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
           Picked as the model&rsquo;s best Wednesday at this counter, out of 49. It is not
-          typical — the same model ran 11% high on a March Wednesday. The map shows you
-          both kinds of day.
+          typical — the same model ran 11% high on a March Wednesday. Check 2025 shows
+          you both kinds of day.
         </p>
       </Reveal>
     </SectionShell>

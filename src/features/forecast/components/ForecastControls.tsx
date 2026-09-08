@@ -4,14 +4,9 @@ import Segmented from "@/components/ui/Segmented";
 import Spinner from "@/components/ui/Spinner";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import type { CounterSite, VehiculeCode } from "@/lib/types";
-import {
-  COVERAGE_FIRST,
-  COVERAGE_LABEL,
-  COVERAGE_LAST,
-  clampDate,
-  isProjection,
-  vehicleLabel,
-} from "../lib/constants";
+import { vehicleLabel } from "../lib/constants";
+import { type Product, clampDate } from "../lib/products";
+import ModelBadge from "./ModelBadge";
 import RecordedDataNote from "./RecordedDataNote";
 import type { RecordedRange } from "../hooks/useRecordedDays";
 
@@ -21,8 +16,15 @@ import type { RecordedRange } from "../hooks/useRecordedDays";
  * Nothing here fetches on change: a forecast is a deliberate act, and firing
  * one per keystroke of a date field would spend four requests to answer one
  * question.
+ *
+ * The date field is bounded by the PRODUCT, not by the model's calendar. Both
+ * bundles can read a calendar out to 2029, but each page offers only the years
+ * its own model may honestly answer -- so there is no reachable date on this
+ * page that the wrong model would have to handle, and no state where the Run
+ * button has to be disabled for a date the picker itself offered.
  */
 export default function ForecastControls({
+  product,
   site,
   date,
   onDateChange,
@@ -36,6 +38,7 @@ export default function ForecastControls({
   loading,
   onRun,
 }: {
+  product: Product;
   site: CounterSite;
   date: string;
   onDateChange: (date: string) => void;
@@ -59,27 +62,33 @@ export default function ForecastControls({
         <div className="col-span-2">
           <label className="block">
             {/* The range is stated, not just enforced -- a picker that refuses
-                2028 without saying why reads as broken. */}
+                2029 without saying why reads as broken. */}
             <span className="label-mono mb-2 flex items-baseline justify-between gap-2">
               <span>Date to forecast</span>
-              <span className="text-[var(--viz-muted)]">{COVERAGE_LABEL}</span>
+              <span className="text-[var(--viz-muted)]">{product.dateLabel}</span>
             </span>
             <input
               type="date"
               value={date}
-              min={COVERAGE_FIRST}
-              max={COVERAGE_LAST}
-              onChange={(e) => onDateChange(clampDate(e.target.value))}
+              min={product.firstDate}
+              max={product.lastDate}
+              onChange={(e) => onDateChange(clampDate(product, e.target.value))}
               className="w-full rounded-[var(--r-control)] border border-[var(--viz-hairline)] bg-[var(--viz-plane)] px-3.5 py-3 text-sm text-[var(--viz-ink)] outline-none transition focus:border-[var(--viz-series)] focus:bg-[var(--viz-surface)] focus:ring-4 focus:ring-[var(--viz-series)]/12"
             />
           </label>
-          {/* A projection needs no actuals file to be known unscoreable, so it
-              says so immediately instead of waiting on a fetch that cannot
-              change the answer. */}
-          {(isProjection(date) || recorded.loaded) && (
+
+          {/* Which model will answer, stated BEFORE the request. The error
+              figure that comes back only means something if the reader knows
+              the model never saw the year being predicted. */}
+          <ModelBadge product={product} variant="picker" />
+
+          {/* Only where a recorded count could exist. On the forecasting page
+              nothing is fetched and `loaded` stays false, so this renders
+              nothing rather than reporting an absence twice -- the badge above
+              has already said the page cannot be scored. */}
+          {product.scoreable && recorded.loaded && (
             <RecordedDataNote
               hasData={recorded.hasDay(date)}
-              projection={isProjection(date)}
               range={recorded.range}
             />
           )}
@@ -120,7 +129,7 @@ export default function ForecastControls({
           </>
         ) : (
           <>
-            Run forecast
+            {product.scoreable ? "Run and check it" : "Run forecast"}
             <ArrowRightIcon />
           </>
         )}

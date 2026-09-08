@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
 import { ArrowRightIcon } from "@/components/ui/icons";
+import { CHECK_2025, FORECAST_2026 } from "@/features/forecast/lib/products";
 import SiteFooter from "./SiteFooter";
 
 /**
@@ -26,15 +27,22 @@ export default function ClosingSection() {
         </Reveal>
         <Reveal delay={140}>
           <p className="lede mt-8 max-w-[48ch]">
-            269 counters on the map. Choose a date, a direction and a vehicle type, and
-            see how the forecast held up — hour by hour.
+            Choose a counter, a date, a direction and a vehicle type. On a day in 2025
+            you also get what the road recorded, so you can see for yourself how the
+            forecast held up — hour by hour.
           </p>
         </Reveal>
         <Reveal delay={200}>
-          <Link href="/map" className="pill mt-11 px-7 py-4 text-[13.5px]">
-            Open the map
-            <ArrowRightIcon size={16} />
-          </Link>
+          <div className="mt-11 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <Link href={CHECK_2025.href} className="pill px-7 py-4 text-[13.5px]">
+              {CHECK_2025.nav}
+              <ArrowRightIcon size={16} />
+            </Link>
+            <Link href={FORECAST_2026.href} className="link-arrow text-[13.5px]">
+              {FORECAST_2026.nav}
+              <ArrowRightIcon size={15} />
+            </Link>
+          </div>
         </Reveal>
       </div>
 

@@ -6,7 +6,7 @@ import type { CounterSite } from "@/lib/types";
 import { useForecastRun } from "../hooks/useForecastRun";
 import { useRecordedDays } from "../hooks/useRecordedDays";
 import { useSeriesSelection } from "../hooks/useSeriesSelection";
-import { DEFAULT_DATE } from "../lib/constants";
+import type { Product } from "../lib/products";
 import { summariseDay } from "../lib/hourly";
 import ForecastControls from "./ForecastControls";
 import ForecastReport from "./ForecastReport";
@@ -18,24 +18,37 @@ import SeriesPicker from "./SeriesPicker";
  * the result. This component holds the panel's own concerns -- the chosen date,
  * dismissal, and which of the four body states to show -- while the selection,
  * the recorded days and the request itself live in hooks beside it.
+ *
+ * Shared by both pages. Everything that differs between them arrives as
+ * `product`: which model to ask, which years the date field offers, and whether
+ * a recorded count can exist to score the answer against.
  */
 export default function ForecastPanel({
+  product,
   site,
   onClose,
 }: {
+  product: Product;
   site: CounterSite;
   onClose: () => void;
 }) {
   const selection = useSeriesSelection(site);
   const { direction, vehicule, series } = selection;
-  const [date, setDate] = useState(DEFAULT_DATE);
+  const [date, setDate] = useState(product.defaultDate);
 
-  const recorded = useRecordedDays(site.poste_id, direction, vehicule);
+  const recorded = useRecordedDays(
+    site.poste_id,
+    direction,
+    vehicule,
+    product.scoreable,
+  );
   const { meta, hours, loading, error, run, clearError } = useForecastRun({
     poste_id: site.poste_id,
     direction,
     vehicule,
     date,
+    model: product.model,
+    scoreable: product.scoreable,
   });
 
   const summary = hours ? summariseDay(hours) : null;
@@ -67,6 +80,7 @@ export default function ForecastPanel({
         <PanelHeader site={site} heading={series?.sens} onClose={onClose} />
 
         <ForecastControls
+          product={product}
           site={site}
           date={date}
           onDateChange={(d) => {
@@ -109,6 +123,7 @@ export default function ForecastPanel({
           {/* Opened, nothing requested yet -- describe the counter, don't guess. */}
           {!hours && !loading && !error && (
             <SeriesPicker
+              product={product}
               site={site}
               direction={direction}
               vehicule={vehicule}
@@ -122,6 +137,7 @@ export default function ForecastPanel({
 
           {hours && meta && summary && !error && (
             <ForecastReport
+              product={product}
               date={date}
               direction={direction}
               vehicule={vehicule}

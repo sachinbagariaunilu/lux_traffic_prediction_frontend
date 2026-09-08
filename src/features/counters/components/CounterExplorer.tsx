@@ -5,6 +5,7 @@ import { useState } from "react";
 import ErrorNotice from "@/components/ui/ErrorNotice";
 import LoadingState from "@/components/ui/LoadingState";
 import ForecastPanel from "@/features/forecast/components/ForecastPanel";
+import type { Product } from "@/features/forecast/lib/products";
 import type { CounterSite } from "@/lib/types";
 import type { MapFocus } from "./CounterMap";
 import { useCounterSearch } from "../hooks/useCounterSearch";
@@ -24,12 +25,17 @@ const CounterMap = dynamic(() => import("./CounterMap"), {
 let focusNonce = 1;
 
 /**
- * The /map experience: the network on a map, a search over it, and the forecast
+ * The map experience: the network on a map, a search over it, and the forecast
  * panel for whichever counter is selected. This component owns exactly one
  * piece of state -- which counter is selected; loading and search live in hooks.
+ *
+ * BOTH pages are this component. `product` decides which model's network is
+ * drawn and which model the panel asks, so the two pages differ in their data
+ * and their words and in nothing else -- there is no second copy of the map,
+ * the search or the report to keep in step.
  */
-export default function CounterExplorer() {
-  const { sites, error, busiest } = useCounterSites();
+export default function CounterExplorer({ product }: { product: Product }) {
+  const { sites, error, busiest } = useCounterSites(product.model);
   const { query, setQuery, matches, clear } = useCounterSearch(sites);
   const [selected, setSelected] = useState<CounterSite | null>(null);
   // Selecting and flying are separate: a pin click selects without moving the
@@ -40,6 +46,7 @@ export default function CounterExplorer() {
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden bg-[var(--viz-plane)]">
       <ExplorerHeader
+        product={product}
         query={query}
         onQueryChange={setQuery}
         matches={matches}
@@ -65,7 +72,11 @@ export default function CounterExplorer() {
               focus={focus}
               onSelect={setSelected}
             />
-            <NetworkSummary count={sites.length} busiest={busiest} />
+            <NetworkSummary
+              count={sites.length}
+              note={product.countersNote}
+              busiest={busiest}
+            />
             <PointSizeLegend />
           </>
         ) : (
@@ -78,6 +89,7 @@ export default function CounterExplorer() {
         // rather than carrying the previous counter's selection across.
         <ForecastPanel
           key={selected.poste_id}
+          product={product}
           site={selected}
           onClose={() => setSelected(null)}
         />

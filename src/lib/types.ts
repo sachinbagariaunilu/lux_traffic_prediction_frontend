@@ -21,16 +21,30 @@ export interface CounterSeries {
   first_day: string;
   last_day: string;
   /**
-   * Days this series recorded in 2025 -- the year the forecast is scored
-   * against. /counters only returns series present in BOTH years, so this is
-   * always >= 1; `thin` marks the few with very little to score against.
+   * Days this series recorded in 2025 -- the year the validation model is
+   * scored against. NULL when the series recorded nothing: /counters now
+   * returns every series a model can forecast, not only the ones with actuals,
+   * so this is no longer guaranteed to exist.
    */
-  recorded_days_2025: number;
+  recorded_days_2025: number | null;
+  /** 2025 actuals exist, so a 2025 forecast can be laid beside the truth. */
+  scoreable_2025: boolean;
+  /**
+   * Which models can forecast this series at all. Load-bearing: the model
+   * follows the DATE, so a series absent from the 2024 model has no 2025
+   * prediction however much 2026 data exists for it, and the picker has to say
+   * so rather than let the request 404.
+   */
+  served_by: string[];
   thin: boolean;
 }
 
 export interface CountersResponse {
+  /** Which model's series list this is. */
+  model: string;
   count: number;
+  scoreable_2025: number;
+  not_scoreable_2025: number;
   counters: CounterSeries[];
 }
 
@@ -44,11 +58,23 @@ export interface HourlyPoint {
 
 export interface ForecastResponse {
   counter: { poste_id: number; direction: number; vehicule: string };
+  /** Which model answered: "2024" (validation) or "2024_2025" (forecasting). */
+  model: string;
   date: string;
   hourly: HourlyPoint[];
   daily_total: number;
   is_holiday_period: boolean;
-  expected_error: number;
+  /** True when actuals/ can supply a recorded line for this exact date. */
+  scoreable: boolean;
+  /** Why not, when it cannot. Null when it can. */
+  scoreable_note: string | null;
+  /**
+   * Full-unseen-year MAE. NULL for the forecasting model, which trained on
+   * every year we hold actuals for and therefore has no unseen one -- see
+   * expected_error_note rather than showing a blank figure.
+   */
+  expected_error: number | null;
+  expected_error_note: string | null;
 }
 
 /** One hour, with the forecast and the recorded truth side by side. */

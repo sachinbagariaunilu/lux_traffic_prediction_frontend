@@ -11,6 +11,14 @@ export interface ForecastRequest {
   direction: number;
   vehicule: string;
   date: string;
+  /** The page's model. See features/forecast/lib/products.ts. */
+  model: string;
+  /**
+   * Whether a recorded count can exist for this date at all. False on the
+   * forecasting page, where every date is past the counts we hold -- so the
+   * actuals request is skipped rather than fetched and discarded.
+   */
+  scoreable: boolean;
 }
 
 /**
@@ -22,7 +30,14 @@ export interface ForecastRequest {
  * than through an effect that clears state -- no stale chart, and no flash of
  * the wrong day between a control moving and a new run finishing.
  */
-export function useForecastRun({ poste_id, direction, vehicule, date }: ForecastRequest) {
+export function useForecastRun({
+  poste_id,
+  direction,
+  vehicule,
+  date,
+  model,
+  scoreable,
+}: ForecastRequest) {
   const [state, setState] = useState<{
     key: string;
     meta: ForecastResponse;
@@ -31,7 +46,10 @@ export function useForecastRun({ poste_id, direction, vehicule, date }: Forecast
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const key = `${poste_id}|${direction}|${vehicule}|${date}`;
+  // The model is in the key as well as the request. It is fixed per page today,
+  // so it cannot change under a stored result -- but leaving it out would make
+  // that a silent assumption rather than a stated one.
+  const key = `${poste_id}|${direction}|${vehicule}|${date}|${model}`;
   const current = state?.key === key ? state : null;
 
   const run = useCallback(async () => {
@@ -41,11 +59,11 @@ export function useForecastRun({ poste_id, direction, vehicule, date }: Forecast
       // The forecast is remote; the actuals are a local static file. Fetch both
       // at once so the slow one sets the pace.
       const [forecast, acts] = await Promise.all([
-        fetchForecast(poste_id, direction, vehicule, date),
-        fetchActuals(poste_id),
+        fetchForecast(poste_id, direction, vehicule, date, model),
+        scoreable ? fetchActuals(poste_id) : Promise.resolve(null),
       ]);
       setState({
-        key: `${poste_id}|${direction}|${vehicule}|${date}`,
+        key: `${poste_id}|${direction}|${vehicule}|${date}|${model}`,
         meta: forecast,
         hours: mergeHours(forecast, acts, direction, vehicule, date),
       });
@@ -55,7 +73,7 @@ export function useForecastRun({ poste_id, direction, vehicule, date }: Forecast
     } finally {
       setLoading(false);
     }
-  }, [poste_id, direction, vehicule, date]);
+  }, [poste_id, direction, vehicule, date, model, scoreable]);
 
   return {
     meta: current?.meta ?? null,

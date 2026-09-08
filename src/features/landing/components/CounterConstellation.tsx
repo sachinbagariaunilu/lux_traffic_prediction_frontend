@@ -1,12 +1,11 @@
 import { COUNTERS, LUX_OUTLINE, VIEW } from "../data/landing-data";
 
 /**
- * NOTE the count here is 270 while the rest of the site says 269, and that is
- * correct rather than a typo. 270 counters exist in the 2024 network and this
- * draws all their true positions. The API serves 269, because counter 474
- * recorded nothing in 2025 and so has no actuals to be scored against -- see
- * the backend's COUNTER_MANIFEST.md. Product copy states what is SERVED; this
- * graphic states what EXISTS.
+ * NOTE this draws 270 counters, which is the 2024 network -- the same set the
+ * Check 2025 page serves. The Forecast 2026-28 page serves 273, because three
+ * counters (607 Marnach, 1414 France Frontiere, 1444 Schifflange) only started
+ * reporting during 2025 and so cannot exist in a 2024-only model. Those three
+ * are absent here.
  *
  * The signature graphic: Luxembourg's border with the 270 real 2024 counters
  * plotted inside it. Border and dots share one projection, so each point sits

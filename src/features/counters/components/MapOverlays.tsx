@@ -8,9 +8,12 @@ import type { CounterSite } from "@/lib/types";
 
 export function NetworkSummary({
   count,
+  note,
   busiest,
 }: {
   count: number;
+  /** Why this count and not the other page's -- see Product.countersNote. */
+  note: string;
   busiest: CounterSite | null;
 }) {
   return (
@@ -19,6 +22,9 @@ export function NetworkSummary({
         <span className="display-num text-[34px] text-[var(--viz-ink)]">{count}</span>
         <span className="label-mono">counters</span>
       </div>
+      <p className="mt-1.5 max-w-[15rem] text-[11px] leading-tight text-[var(--viz-muted)]">
+        {note}
+      </p>
       <p className="mt-2 text-[11px] leading-tight text-[var(--viz-ink-2)]">
         Click any point to forecast it
       </p>

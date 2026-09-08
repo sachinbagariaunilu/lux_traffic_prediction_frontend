@@ -5,34 +5,20 @@ import type { RecordedRange } from "../hooks/useRecordedDays";
  * Without it the only way to find out is to run a forecast and see the actual
  * line missing.
  *
- * Three states, because "no recorded data" covers two very different cases and
- * conflating them makes the honest one look broken. A 2025 day this counter
- * skipped is a gap in the data; a 2026 or 2027 day is a date the road has not
- * reached yet. Only the first is a shortcoming.
+ * Rendered ONLY on the page whose dates can be scored. It used to carry a third
+ * "projection" state for 2026+ dates, because a 2025 day the counter skipped
+ * and a day the road has not reached are entirely different things and one
+ * sentence covering both makes the honest one look broken. That distinction is
+ * now structural -- the two cases live on two pages -- so what is left here is
+ * the one case this page has: a 2025 day, reported or missed.
  */
 export default function RecordedDataNote({
   hasData,
-  projection,
   range,
 }: {
   hasData: boolean;
-  projection: boolean;
   range: RecordedRange | null;
 }) {
-  if (projection) {
-    return (
-      <p className="label-mono mt-2.5 flex items-start gap-1.5 leading-tight">
-        <span
-          className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--viz-series)]"
-          aria-hidden
-        />
-        <span className="text-[var(--viz-muted)]">
-          Projection — this date has not happened, so nothing can score it
-        </span>
-      </p>
-    );
-  }
-
   return (
     <p className="label-mono mt-2.5 flex items-start gap-1.5 leading-tight">
       {hasData ? (

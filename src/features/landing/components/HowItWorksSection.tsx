@@ -9,7 +9,10 @@ import SectionShell from "./SectionShell";
  */
 export default function HowItWorksSection() {
   return (
-    <SectionShell eyebrow="How it works" heading={<>2024 taught it. 2025 tests it.</>}>
+    <SectionShell
+      eyebrow="How it works"
+      heading={<>2024 taught it. 2025 tested it. 2026 is next.</>}
+    >
       <ol className="mt-14">
         {STEPS.map((s, i) => (
           <Reveal as="li" key={s.n} delay={i * 90}>

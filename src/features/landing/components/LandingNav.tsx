@@ -1,16 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "@/components/ui/icons";
+import { CHECK_2025, FORECAST_2026 } from "@/features/forecast/lib/products";
 
 /**
- * Sticky wordmark, a mono dateline, and one filled call to action. The rule
- * under it wipes in on scroll through a scroll-driven animation -- no
- * listener, no state, and it degrades to a ruleless header where unsupported.
+ * Sticky wordmark and both pages. The rule under it wipes in on scroll through
+ * a scroll-driven animation -- no listener, no state, and it degrades to a
+ * ruleless header where unsupported.
+ *
+ * Both products are named here rather than behind one "open the map" button:
+ * the split is the first thing to understand, and a single entry point implies
+ * a single model.
  */
 export default function LandingNav() {
   return (
     <nav className="site-nav">
-      <div className="mx-auto flex max-w-[82rem] items-center gap-4 px-6 py-3.5 sm:px-10">
+      <div className="mx-auto flex max-w-[82rem] items-center gap-3 px-6 py-3.5 sm:gap-4 sm:px-10">
         <Image
           src="/world.png"
           alt="Luxembourg"
@@ -22,14 +27,21 @@ export default function LandingNav() {
         <span className="whitespace-nowrap font-[family-name:var(--font-grotesk)] text-[13.5px] font-medium uppercase tracking-[0.01em] sm:text-[15px]">
           Traffic Forecasting
         </span>
-        <span className="label-mono ml-2 hidden sm:block">LU · 2024 → 2029</span>
+        <span className="label-mono ml-2 hidden lg:block">LU · 2025 → 2028</span>
+
+        {/* The forecast page is the quieter link: the scored one is where the
+            evidence is, so it keeps the filled pill. */}
         <Link
-          href="/map"
-          className="pill ml-auto whitespace-nowrap px-4 py-2.5 text-[12.5px] sm:px-5"
+          href={FORECAST_2026.href}
+          className="link-arrow ml-auto hidden whitespace-nowrap text-[12.5px] sm:inline-flex"
         >
-          {/* "Open the map" does not fit beside the wordmark on a phone. */}
-          <span className="hidden sm:inline">Open the map</span>
-          <span className="sm:hidden">Map</span>
+          {FORECAST_2026.nav}
+        </Link>
+        <Link
+          href={CHECK_2025.href}
+          className="pill ml-auto whitespace-nowrap px-4 py-2.5 text-[12.5px] sm:ml-0 sm:px-5"
+        >
+          {CHECK_2025.nav}
           <ArrowRightIcon size={14} />
         </Link>
       </div>

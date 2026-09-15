@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatCount, formatHour } from "@/lib/format";
+import { formatCount, formatHour, formatSignedPercent } from "@/lib/format";
 import type { MergedHour } from "@/lib/types";
 
 /**
@@ -33,6 +33,22 @@ function ChartTooltip({ active, payload, dayName }: TooltipProps) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   const err = p.actual !== null ? p.predicted - p.actual : null;
+  // The same miss means very different things at different volumes: 73 vehicles
+  // is a rounding error at 2,000/h and a doubling at 70/h. The percentage is
+  // what makes the tooltip comparable across hours and across counters.
+  //
+  // WITHHELD below 10 recorded vehicles, and that is not a rare edge: 8.65% of
+  // all recorded hours are exactly ZERO, which has no denominator at all, and
+  // just above zero the figure explodes -- 5 predicted against 2 recorded is
+  // "+150%", which reads as a catastrophic miss of three vehicles. The absolute
+  // count is the honest statement down there, so only it is shown.
+  //
+  // SIGNED, and the sign is the same convention as the "How close we were"
+  // tile: positive means the model predicted ABOVE what the road recorded.
+  // Both derive from (predicted - actual), so a reader who sees -4.4% here and
+  // -5% there is looking at the same direction of miss, hour and day.
+  const errPct =
+    p.actual !== null && p.actual >= 10 ? (err! / p.actual) * 100 : null;
 
   return (
     <div className="glass-strong ring-hairline-lg min-w-[172px] px-3.5 py-3">
@@ -67,8 +83,21 @@ function ChartTooltip({ active, payload, dayName }: TooltipProps) {
         </div>
       </dl>
       {err !== null && (
-        <div className="mt-1.5 border-t border-[var(--viz-grid)] pt-1.5 text-xs text-[var(--viz-ink-2)]">
-          Model was {err === 0 ? "exact" : `${formatCount(Math.abs(err))} ${err > 0 ? "high" : "low"}`}
+        <div className="mt-1.5 flex items-baseline gap-1.5 border-t border-[var(--viz-grid)] pt-1.5 text-xs text-[var(--viz-ink-2)]">
+          <span>
+            Model was{" "}
+            {err === 0
+              ? "exact"
+              : `${formatCount(Math.abs(err))} ${err > 0 ? "high" : "low"}`}
+          </span>
+          {errPct !== null && err !== 0 && (
+            <span className="ml-auto font-semibold tabular-nums text-[var(--viz-ink)]">
+              {/* One decimal, and no special case for tiny values: a "+0.0%"
+                  cannot be misread as exact when the words beside it already
+                  say "Model was 1 high". */}
+              {formatSignedPercent(errPct, 1)}
+            </span>
+          )}
         </div>
       )}
     </div>

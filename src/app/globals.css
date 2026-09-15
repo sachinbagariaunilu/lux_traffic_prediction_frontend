@@ -365,6 +365,7 @@ button:disabled {
 
   /* Outlined secondary, on paper. */
   .pill-quiet {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -382,7 +383,53 @@ button:disabled {
     background: color-mix(in srgb, var(--viz-ink) 4%, transparent);
   }
 
-  /* Sticky page header. Sits on the paper, declares itself with a hairline. */
+  /* --------------------------------------------------------------------------
+     The outlined button, chamfered
+     --------------------------------------------------------------------------
+     A `border` is drawn on the border-box, which is always a rectangle, and
+     `clip-path` then cuts the corner off it -- so a plain `.pill-quiet.cut`
+     came out with three ruled edges and one bare diagonal where the border had
+     simply been sliced away. The white gap on the cut side was the button's own
+     background showing through the missing edge.
+
+     So on a cut button the border stops being a border. The element's
+     background becomes the edge colour and fills the whole chamfered shape; the
+     ::before lays the fill back over it inset by 1px, clipped to the same
+     polygon. What is left is a 1px rim that follows all five sides, diagonal
+     included. The border is kept at 1px and made transparent rather than
+     removed, so the button's metrics do not shift by 2px when it is cut.
+
+     --cut-fill must be the ground the button sits ON -- the rim is only a rim
+     because the fill hides the middle. It defaults to the card surface, which
+     is where these buttons live; on the grey plane, pass --cut-fill.
+     -------------------------------------------------------------------------- */
+  .pill-quiet.cut {
+    isolation: isolate;
+    border-color: transparent;
+    background: var(--cut-line, var(--viz-hairline));
+  }
+
+  .pill-quiet.cut::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    background: var(--cut-fill, var(--viz-surface));
+    clip-path: var(--cut-path);
+    z-index: -1;
+  }
+
+  .pill-quiet.cut:hover {
+    border-color: transparent;
+    --cut-line: var(--viz-ink);
+    --cut-fill: color-mix(in srgb, var(--viz-ink) 4%, var(--viz-surface));
+  }
+
+  /* Sticky page header.
+     Carries `.inverted` at the call site, so `--viz-plane` here is the near
+     black of the hero plate and the bar floats over it rather than cutting a
+     light band across it. The colour is not hard-coded for that reason: the
+     rule below is the same translucency it always had, and the tokens decide
+     what it is translucent *in*. */
   .site-nav {
     position: sticky;
     top: 0;
@@ -667,11 +714,18 @@ button:disabled {
   background: var(--viz-plane);
 }
 
-/* OSM's default tiles are saturated enough to fight the pins and the paper.
-   Draining them turns the basemap back into a backdrop -- and costs one line,
-   rather than a third-party tile provider and its attribution. */
+/* The basemap reads as a map again.
+   It used to run through `saturate(0.2) sepia(0.1)`, which turned Luxembourg
+   into a sheet of beige: motorways, rivers and forest all collapsed onto one
+   value, so the thing under the pins stopped being legible AS a map. The pins
+   do not actually need that help -- they are saturated blue/orange circles with
+   a 2px white ring, and they sit on top of the tile pane.
+
+   So the tiles keep their own colours, with the mildest possible correction:
+   a touch of contrast and saturation, the way a photo is finished rather than
+   filtered. Roads stay road-coloured, green stays green. */
 .leaflet-tile-pane {
-  filter: saturate(0.2) sepia(0.1) brightness(1.06) contrast(0.9);
+  filter: saturate(1.06) contrast(1.03);
 }
 
 .leaflet-tooltip {
@@ -830,5 +884,458 @@ button:disabled {
 
   .lux-rule-y {
     background: linear-gradient(180deg, var(--lux-red-ink), var(--lux-blue-ink));
+  }
+}
+
+/* ==========================================================================
+   The cut corner
+   ==========================================================================
+   The one shape this theme is built on: a block with a 45 degree chamfer taken
+   out of a single corner. Everything -- cards, media, tags, buttons, the hero
+   plate -- is the same rectangle with the same corner removed, which is what
+   makes eight unrelated sections read as one product.
+
+   Why a chamfer rather than a radius. A rounded corner is a softening; it says
+   "friendly". A cut corner is a removal; it says the block was machined to fit
+   something. On a page whose whole argument is "this was measured", that is the
+   right register -- and it lets the layout stay square, where a radius would
+   have forced every nested element to round along with it.
+
+   ONE corner, not four. Four cuts is an octagon and reads as a badge. One cut
+   is an asymmetry, and asymmetry is what gives the block a reading direction:
+   bottom-right by default, which is where a Latin reader's eye leaves.
+
+   IMPLEMENTATION. `clip-path` on the element, with the polygon in a custom
+   property so a modifier can move the cut without restating the rule. clip-path
+   also clips `overflow`, so a nested image inherits the corner for free -- no
+   mask, no SVG, no extra DOM.
+
+   The cost of clip-path is that `border` and `box-shadow` are clipped away with
+   everything else. `.cut-edge` buys the hairline back by painting the border
+   colour as the element's own background and laying the surface over it inset
+   by 1px, clipped to the same polygon. The diagonal hairline comes out at
+   ~0.7px against 1px on the straight edges -- invisible at any real size, and
+   the only honest way to get a hairline that follows a chamfer.
+   ========================================================================== */
+:root {
+  /* Three steps. The cut is a fixed length, never a percentage: a percentage
+     chamfer grows with the block and turns a card into an arrow. */
+  --cut-sm: 10px;   /* tags, controls, small meta blocks */
+  --cut: 26px;      /* the default -- cards, panels, figures */
+  --cut-lg: 56px;   /* hero plate, full-bleed media */
+}
+
+@layer components {
+  /* The base shape: cut at the bottom-right. */
+  .cut {
+    /* A chamfer and a radius are two different answers to the same corner, and
+       an element carrying both looks like neither. It also renders badly: the
+       background is painted round while the ::before fill is clipped square, so
+       the two disagree by a couple of pixels and the edge comes out uneven --
+       which is what made cut buttons look like they had a drop shadow. Controls
+       bring `--r-control` with them, so the reset belongs here rather than at
+       each call site. */
+    border-radius: 0;
+    --cut-size: var(--cut);
+    --cut-path: polygon(
+      0 0,
+      100% 0,
+      100% calc(100% - var(--cut-size)),
+      calc(100% - var(--cut-size)) 100%,
+      0 100%
+    );
+    clip-path: var(--cut-path);
+  }
+
+  /* Size modifiers. */
+  .cut-s { --cut-size: var(--cut-sm); }
+  .cut-l { --cut-size: var(--cut-lg); }
+
+  /* Corner modifiers. Each restates the polygon with the notch moved; the
+     vertex order stays clockwise from the top-left so the shapes interpolate
+     if one is ever animated into another. */
+  .cut-tl {
+    --cut-path: polygon(
+      var(--cut-size) 0,
+      100% 0,
+      100% 100%,
+      0 100%,
+      0 var(--cut-size)
+    );
+  }
+
+  .cut-tr {
+    --cut-path: polygon(
+      0 0,
+      calc(100% - var(--cut-size)) 0,
+      100% var(--cut-size),
+      100% 100%,
+      0 100%
+    );
+  }
+
+  .cut-bl {
+    --cut-path: polygon(
+      0 0,
+      100% 0,
+      100% 100%,
+      var(--cut-size) 100%,
+      0 calc(100% - var(--cut-size))
+    );
+  }
+
+  /* Both right corners -- for a tall media plate, where one cut on a long edge
+     looks like a mistake rather than a decision. */
+  .cut-r {
+    --cut-path: polygon(
+      0 0,
+      calc(100% - var(--cut-size)) 0,
+      100% var(--cut-size),
+      100% calc(100% - var(--cut-size)),
+      calc(100% - var(--cut-size)) 100%,
+      0 100%
+    );
+  }
+
+  /* --------------------------------------------------------------------------
+     .cut-edge -- the hairline that follows the chamfer
+     --------------------------------------------------------------------------
+     Pair with .cut. The element becomes the border; ::before becomes the
+     surface. Children need to clear the ::before, hence the z-index on the
+     direct-child selector rather than on every call site.
+     -------------------------------------------------------------------------- */
+  .cut-edge {
+    position: relative;
+    /* `isolation` is what makes the negative z-index below safe. It gives the
+       block its own stacking context, so the fill layer can sit behind the
+       block's TEXT while still sitting in front of the block's own background
+       -- and it cannot escape backwards past an ancestor.
+
+       The earlier version painted the fill at z-index 0 and lifted every direct
+       child to z-index 1 to clear it. That works only while every child is an
+       element: a bare text node cannot take a z-index, so any block whose
+       content was loose text -- a button label, say -- had its own fill painted
+       straight over the words. Painting the fill at -1 instead puts it below
+       all inline content by definition, so loose text and elements both work. */
+    isolation: isolate;
+    background: var(--cut-line, var(--viz-border));
+  }
+
+  .cut-edge::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    background: var(--cut-fill, var(--viz-surface));
+    clip-path: var(--cut-path);
+    z-index: -1;
+  }
+
+  /* A filled block with no hairline -- for cards that sit on the dark ground,
+     where an edge would only add a seam. */
+  .cut-fill {
+    background: var(--cut-fill, var(--viz-surface));
+  }
+
+  /* --------------------------------------------------------------------------
+     .cut-mark -- the accent in the notch
+     --------------------------------------------------------------------------
+     A triangle laid into the cut corner, clipped by the parent's own chamfer so
+     what survives is a clean diagonal band of colour along the cut. This is the
+     one place the flag hue appears on a card, and it is what stops a page of
+     chamfered grey blocks from going monochrome.
+
+     Sized off --cut-size so the band scales with the corner it decorates.
+     -------------------------------------------------------------------------- */
+  .cut-mark::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: calc(var(--cut-size) * 1.85);
+    height: calc(var(--cut-size) * 1.85);
+    background: var(--cut-accent, var(--lux-blue));
+    /* The corner triangle; the parent clip removes its point, leaving a band. */
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    z-index: 2;
+    pointer-events: none;
+    transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* The band deepens when the card is hovered -- the only motion a static card
+     needs, and it reads as the corner being pulled rather than a colour change. */
+  .cut-mark:hover::after {
+    width: calc(var(--cut-size) * 2.5);
+    height: calc(var(--cut-size) * 2.5);
+  }
+
+  /* Corner variants. The mark has to sit in the corner that is actually cut --
+     a band in an uncut corner reads as a stray triangle, because there is no
+     chamfer there to slice its point off. One variant per .cut-* modifier. */
+  .cut-mark-tr::after {
+    right: 0;
+    left: auto;
+    top: 0;
+    bottom: auto;
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+  }
+
+  .cut-mark-bl::after {
+    left: 0;
+    right: auto;
+    bottom: 0;
+    top: auto;
+    clip-path: polygon(0 0, 0 100%, 100% 100%);
+  }
+
+  .cut-mark-tl::after {
+    left: 0;
+    right: auto;
+    top: 0;
+    bottom: auto;
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+  }
+
+  /* --------------------------------------------------------------------------
+     .media-bar -- the specimen label under a picture
+     --------------------------------------------------------------------------
+     A caption bar BELOW the image rather than a scrim over it. The overlay
+     version (.media-caption) still exists and is right over a dark photograph,
+     but it turns to grey mud over a light one -- and half this project's
+     pictures are charts on a near-white ground. A bar under the picture is
+     legible over every image there will ever be, and it reads as the label on a
+     plate rather than as text dropped onto artwork.
+     -------------------------------------------------------------------------- */
+  .media-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 1.125rem;
+    border-top: 1px solid var(--viz-hairline);
+    border-bottom: 1px solid var(--viz-hairline);
+    background: var(--viz-band);
+  }
+
+  /* ==========================================================================
+     Media
+     ==========================================================================
+     Images are framed, never floated: a plate with the chamfer, the picture
+     filling it, and a slow scale on hover so the frame stays put while the
+     picture moves inside it. `.media img` covers, so any aspect ratio can be
+     dropped into any plate without distorting.
+     ========================================================================== */
+  .media {
+    position: relative;
+    overflow: hidden;
+    background: var(--viz-band);
+    isolation: isolate;
+  }
+
+  .media img,
+  .media svg,
+  .media video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .media:hover img,
+  .media:hover video {
+    transform: scale(1.035);
+  }
+
+  /* A caption bar that sits over the foot of a picture. Kept to a scrim rather
+     than a solid bar so the image is never cut in half by its own label. */
+  .media-caption {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 2.25rem 1.125rem 1rem;
+    background: linear-gradient(to top, rgb(10 10 10 / 0.78), transparent);
+    color: #fff;
+    z-index: 1;
+  }
+
+  .media-caption .label-mono {
+    color: rgb(255 255 255 / 0.82);
+  }
+
+  /* ==========================================================================
+     Bracketed eyebrow
+     ==========================================================================
+     The reference layout's section marker: a bracket, the mark, a dash, the
+     section name. The brackets are drawn as ::before/::after so the label text
+     stays a clean string for a screen reader and for translation.
+     ========================================================================== */
+  .eyebrow-bracket {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--viz-muted);
+  }
+
+  .eyebrow-bracket::before { content: "["; opacity: 0.5; }
+  .eyebrow-bracket::after  { content: "]"; opacity: 0.5; }
+
+  /* The mark inside the bracket, in the accent. */
+  .eyebrow-bracket b {
+    font-weight: 400;
+    color: var(--viz-ink);
+  }
+
+  .eyebrow-bracket i {
+    font-style: normal;
+    opacity: 0.45;
+  }
+
+  /* ==========================================================================
+     Tags and stat badges
+     ========================================================================== */
+
+  /* Small chamfered tag -- the "UI/UX · Web Design" motif. */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.7rem;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--viz-ink-2);
+    background: color-mix(in srgb, var(--viz-ink) 6%, transparent);
+  }
+
+  /* On the dark ground the same tag needs a lift rather than a tint. */
+  .inverted .tag {
+    background: rgb(255 255 255 / 0.08);
+    color: var(--viz-ink-2);
+  }
+
+  /* ==========================================================================
+     Marquee
+     ==========================================================================
+     A single strip of text that runs forever. Two identical copies translated
+     as one track, so the loop has no seam; `aria-hidden` on the second copy so
+     it is announced once, not twice.
+     ========================================================================== */
+  .marquee {
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+
+  .marquee-track {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 2.5rem;
+    padding-right: 2.5rem;
+    min-width: 100%;
+    animation: marquee 38s linear infinite;
+  }
+
+  @keyframes marquee {
+    to { transform: translateX(-100%); }
+  }
+
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  /* ==========================================================================
+     Hero furniture
+     ========================================================================== */
+
+  /* The rotating seal CTA. The ring of characters is positioned by the
+     component; this only spins it and stops the spin under the cursor. */
+  .seal {
+    animation: sealSpin 22s linear infinite;
+  }
+
+  @keyframes sealSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  .seal-stop:hover .seal {
+    animation-play-state: paused;
+  }
+
+  /* A faint engineering grid, for the hero plate. Two gradients, no image. */
+  .grid-field {
+    background-image:
+      linear-gradient(to right, var(--grid-ink, rgb(255 255 255 / 0.055)) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-ink, rgb(255 255 255 / 0.055)) 1px, transparent 1px);
+    background-size: var(--grid-step, 64px) var(--grid-step, 64px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track,
+    .seal {
+      animation: none !important;
+    }
+    .media img,
+    .media video,
+    .cut-mark::after {
+      transition: none !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   Hero display
+   ==========================================================================
+   The one place the type goes lowercase.
+
+   Everywhere else this layout sets Space Grotesk in caps, which is what gives
+   the section headings their engineered, plate-stamped register. The hero does
+   the opposite on purpose: a short lowercase claim, set enormous and tight,
+   with a full stop after each clause. Lowercase has descenders and a real
+   x-height silhouette, so at this size it reads as a SENTENCE someone means,
+   where caps at the same size read as signage.
+
+   Tracking goes negative because the size is doing the shouting -- at 9vw,
+   normal tracking leaves holes between the letters big enough to read as gaps
+   between words.
+   ========================================================================== */
+@layer components {
+  .hero-display {
+    font-family: var(--font-grotesk), system-ui, sans-serif;
+    /* Sized for a column, not for the full measure: the claim shares its row
+       with the counter map, so it has roughly half the width a full-bleed
+       headline would have had. 9vw overflowed that column on every desktop
+       width; 5.6vw fills it. */
+    font-size: clamp(2.5rem, 5.6vw, 5.25rem);
+    line-height: 0.92;
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    text-transform: none;
+    text-wrap: balance;
+  }
+
+  /* The second clause drops to the muted ink, so the two halves of the claim
+     read as a call and an answer rather than one long shout. */
+  .hero-display em {
+    font-style: normal;
+    color: var(--viz-muted);
+  }
+
+  /* The full stop is the reference layout's tell. It carries the accent so the
+     eye lands on the end of each clause. */
+  .hero-display i {
+    font-style: normal;
+    color: var(--lux-blue);
   }
 }

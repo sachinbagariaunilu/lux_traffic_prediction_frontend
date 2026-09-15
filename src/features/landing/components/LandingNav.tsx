@@ -14,7 +14,7 @@ import { CHECK_2025, FORECAST_2026 } from "@/features/forecast/lib/products";
  */
 export default function LandingNav() {
   return (
-    <nav className="site-nav">
+    <nav className="site-nav inverted">
       <div className="mx-auto flex max-w-[82rem] items-center gap-3 px-6 py-3.5 sm:gap-4 sm:px-10">
         <Image
           src="/world.png"
@@ -39,7 +39,7 @@ export default function LandingNav() {
         </Link>
         <Link
           href={CHECK_2025.href}
-          className="pill ml-auto whitespace-nowrap px-4 py-2.5 text-[12.5px] sm:ml-0 sm:px-5"
+          className="cut cut-s pill ml-auto whitespace-nowrap px-4 py-2.5 text-[12.5px] sm:ml-0 sm:px-5"
         >
           {CHECK_2025.nav}
           <ArrowRightIcon size={14} />

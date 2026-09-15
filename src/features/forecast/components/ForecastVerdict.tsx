@@ -6,6 +6,13 @@ import { formatCount } from "@/lib/format";
  * It compares against the truth where we have it and against the forecast
  * where we do not -- and says which it did, because "busier than usual" means
  * something different when it is a prediction.
+ *
+ * NOTE the deliberate asymmetry in the wording below: predictions are hedged
+ * ("about 1,240"), recorded counts are NOT. The recorded figure is a measured
+ * fact and hedging it would be false modesty; the prediction carries a real
+ * spread -- measured at roughly -10% to +21% at busy hours, wider when quiet --
+ * and printing it bare implies a precision the model does not have. Do not
+ * "fix" the inconsistency by making both match.
  */
 export default function ForecastVerdict({
   dayName,
@@ -50,7 +57,7 @@ export default function ForecastVerdict({
               <strong className="font-semibold text-[var(--viz-actual)]">
                 {formatCount(actual)}
               </strong>{" "}
-              vehicles, {accuracy} at{" "}
+              vehicles, {accuracy} at about{" "}
               <strong className="font-semibold text-[var(--viz-series)]">
                 {formatCount(predicted)}
               </strong>
@@ -58,7 +65,7 @@ export default function ForecastVerdict({
             </>
           ) : (
             <>
-              We predict{" "}
+              We expect about{" "}
               <strong className="font-semibold text-[var(--viz-series)]">
                 {formatCount(predicted)}
               </strong>{" "}

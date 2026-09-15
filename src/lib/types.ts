@@ -77,6 +77,30 @@ export interface ForecastResponse {
   expected_error_note: string | null;
 }
 
+/**
+ * A SHORT-HORIZON answer, from POST /forecast/{lead}h on the lag service.
+ *
+ * A different shape from ForecastResponse, and deliberately not merged with it:
+ * this model is given the counter's recent observed counts and answers only
+ * dates within its lead, so it carries what it was given (history_hours_*) and
+ * lacks what it cannot know (scoreable, expected_error). Components read
+ * ForecastResponse -- features/forecast/lib/engine.ts normalises this into it.
+ */
+export interface LagForecastResponse {
+  counter: { poste_id: number; direction: number; vehicule: string };
+  /** "24h" or "48h" -- the lead, not a training year. */
+  model: string;
+  /** The bundle's own description of itself, from its metadata. */
+  kind: string;
+  date: string;
+  /** Hours the caller sent, and the span the model required. */
+  history_hours_supplied: number;
+  history_hours_required: number;
+  is_holiday_period: boolean;
+  daily_total: number;
+  hourly: { hour: number; predicted: number; typical_for_slot: number }[];
+}
+
 /** One hour, with the forecast and the recorded truth side by side. */
 export interface MergedHour {
   hour: number;

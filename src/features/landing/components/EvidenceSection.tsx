@@ -11,15 +11,22 @@ import SectionShell from "./SectionShell";
 export default function EvidenceSection() {
   return (
     <SectionShell eyebrow="The evidence">
-      <div className="mt-14 grid gap-px bg-[var(--viz-hairline)] sm:grid-cols-2 lg:grid-cols-4">
+      {/* Cut blocks with a gap between them, rather than four flush panes
+          divided by hairlines. The chamfer only exists if the ground shows
+          through it, so the moment these blocks are the theme's shape they
+          also have to stop touching. */}
+      <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {EVIDENCE.map((m, i) => (
-          <Reveal key={m.label} delay={i * 70}>
+          <Reveal key={m.label} delay={i * 70} className="h-full">
             <div
-              className={`flex h-full flex-col p-7 ${
-                m.accent
-                  ? "bg-[var(--lux-blue)] text-[#0a0a0a]"
-                  : "bg-[var(--viz-surface)]"
+              className={`cut cut-edge flex h-full flex-col p-7 ${
+                m.accent ? "text-[#0a0a0a]" : ""
               }`}
+              style={
+                m.accent
+                  ? ({ "--cut-fill": "var(--lux-blue)" } as React.CSSProperties)
+                  : undefined
+              }
             >
               <div
                 className={`label-mono ${m.accent ? "text-[#0a0a0a]/70" : ""}`}

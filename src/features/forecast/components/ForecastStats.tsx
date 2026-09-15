@@ -2,12 +2,18 @@ import StatTile from "@/components/ui/StatTile";
 import { formatCount, formatHour, formatSignedPercent } from "@/lib/format";
 import type { DaySummary } from "../lib/hourly";
 
-/** The four figures worth reading before the chart. */
+/**
+ * The four figures worth reading before the chart.
+ *
+ * "We predicted about" against a bare "Really happened": the hedge is on the
+ * model's number only. The recorded count is measured, and softening it would
+ * suggest the road counter is the uncertain half.
+ */
 export default function ForecastStats({ summary }: { summary: DaySummary }) {
   return (
     <div className="grid grid-cols-2 gap-2.5">
       <StatTile
-        label="We predicted"
+        label="We predicted about"
         value={formatCount(summary.predictedTotal)}
         sub="vehicles all day"
         tone="series"
@@ -36,7 +42,7 @@ export default function ForecastStats({ summary }: { summary: DaySummary }) {
       <StatTile
         label="Busiest hour"
         value={formatHour(summary.peak.hour)}
-        sub={`${formatCount(summary.peak.predicted)} vehicles/h`}
+        sub={`about ${formatCount(summary.peak.predicted)} vehicles/h`}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
 import { ArrowRightIcon } from "@/components/ui/icons";
@@ -13,6 +14,13 @@ import SectionShell from "./SectionShell";
  * the comparison at all -- and the natural assumption, that we trained on
  * everything and then quoted an error against data the model had memorised, is
  * exactly what the two pages exist to rule out.
+ *
+ * This is also where the theme's shape is most visible: each card is a block
+ * with one corner cut away and an accent band laid into the cut. The two cards
+ * cut towards each other -- the left card at its bottom-right, the right card
+ * at its bottom-left -- so the pair reads as one object that has been split,
+ * which is the section's entire argument. A card cut on an arbitrary corner
+ * would be decoration; cut this way it is a diagram.
  *
  * Every figure and sentence comes from features/forecast/lib/products.ts, the
  * same file the pages themselves read, so the overview cannot describe a page
@@ -51,57 +59,104 @@ export default function TwoPagesSection() {
         </>
       }
     >
-      <div className="mt-14 grid gap-px bg-[var(--viz-hairline)] lg:grid-cols-2">
+      <div className="mt-14 grid gap-5 lg:grid-cols-2 lg:gap-6">
         {PRODUCT_LIST.map((p, i) => {
           // Same tokens the badge and the charts use: the scored page takes the
           // recorded-truth colour, the forecast page the prediction colour.
           const tone = p.scoreable ? "var(--viz-actual)" : "var(--viz-series)";
+          // The pair cuts inwards -- see the note above.
+          const corner = i === 0 ? "" : "cut-bl cut-mark-bl";
+
           return (
-            <Reveal key={p.id} delay={i * 90}>
-              <div className="flex h-full flex-col bg-[var(--viz-surface)] p-7 sm:p-9">
-                <p className="label-mono flex items-center gap-2">
-                  <span
-                    className="h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ background: tone }}
-                    aria-hidden
-                  />
-                  <span style={{ color: tone }}>{p.roleLabel}</span>
-                </p>
-
-                <h3 className="display-md mt-5">{p.title}</h3>
-                <p className="mt-4 max-w-[42ch] text-[14px] leading-[1.6] text-[var(--viz-ink-2)]">
-                  {p.promise}
-                </p>
-
-                <dl className="mt-7 border-t border-[var(--viz-hairline)]">
-                  {specs(p).map((s) => (
-                    <div
-                      key={s.k}
-                      className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-[var(--viz-hairline)] py-3"
-                    >
-                      <dt className="label-mono">{s.k}</dt>
-                      <dd className="text-[13px] font-medium tabular-nums text-[var(--viz-ink)]">
-                        {s.v}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-
-                <p className="mt-6 max-w-[42ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
-                  {p.caveat}
-                </p>
-
-                {/* mt-auto so both buttons sit on one line however unevenly the
-                    two cards fill. Outlined, not filled: the two pages are
-                    peers, and two filled primaries side by side would make the
-                    choice look like a recommendation. */}
-                <div className="mt-auto pt-8">
-                  <Link href={p.href} className="pill-quiet px-6 py-3.5 text-[13px]">
-                    {p.nav}
-                    <ArrowRightIcon />
-                  </Link>
+            <Reveal key={p.id} delay={i * 90} className="h-full">
+              <article
+                className={`cut ${corner} cut-edge cut-mark group flex h-full flex-col`}
+                style={{ "--cut-accent": tone } as React.CSSProperties}
+              >
+                {/* ---- the picture ----------------------------------------
+                    Decorative here: the role label and the whole card beneath
+                    it already say what the image shows, so announcing it again
+                    would only repeat the card to a screen reader. The longer
+                    p.mediaAlt exists for call sites where the image stands
+                    alone. `unoptimized` -- the source is a vector. */}
+                <div className="m-px">
+                  <div className="media aspect-[16/9]">
+                    <Image
+                      src={p.media}
+                      alt=""
+                      width={1600}
+                      height={900}
+                      unoptimized
+                      aria-hidden
+                      className="h-full w-full"
+                    />
+                  </div>
+                  <div className="media-bar">
+                    <span className="label-mono">{p.dateLabel}</span>
+                    <span className="label-mono">{p.modelLabel}</span>
+                  </div>
                 </div>
-              </div>
+
+                <div className="flex flex-1 flex-col p-7 sm:p-9">
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="label-mono flex items-center gap-2">
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{ background: tone }}
+                        aria-hidden
+                      />
+                      <span style={{ color: tone }}>{p.roleLabel}</span>
+                    </p>
+                    <Image
+                      src={p.icon}
+                      alt=""
+                      width={56}
+                      height={56}
+                      className="-mt-1.5 h-14 w-14 shrink-0 select-none"
+                      aria-hidden
+                    />
+                  </div>
+
+                  <h3 className="display-md mt-5">{p.title}</h3>
+                  <p className="mt-4 max-w-[42ch] text-[14px] leading-[1.6] text-[var(--viz-ink-2)]">
+                    {p.promise}
+                  </p>
+
+                  <dl className="mt-7 border-t border-[var(--viz-hairline)]">
+                    {specs(p).map((s) => (
+                      <div
+                        key={s.k}
+                        className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-[var(--viz-hairline)] py-3"
+                      >
+                        <dt className="label-mono">{s.k}</dt>
+                        <dd className="text-[13px] font-medium tabular-nums text-[var(--viz-ink)]">
+                          {s.v}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+
+                  <p className="mt-6 max-w-[42ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
+                    {p.caveat}
+                  </p>
+
+                  {/* mt-auto so both buttons sit on one line however unevenly
+                      the two cards fill. Outlined, not filled: the two pages
+                      are peers, and two filled primaries side by side would
+                      make the choice look like a recommendation.
+                      pr-14 keeps the label clear of the accent band in the
+                      cut corner -- the band is 2.5x the 26px cut on hover. */}
+                  <div className="mt-auto pt-8">
+                    <Link
+                      href={p.href}
+                      className="cut cut-s pill-quiet px-6 py-3.5 text-[13px]"
+                    >
+                      {p.nav}
+                      <ArrowRightIcon />
+                    </Link>
+                  </div>
+                </div>
+              </article>
             </Reveal>
           );
         })}

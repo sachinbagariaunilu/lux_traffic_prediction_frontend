@@ -288,37 +288,77 @@ export const COUNTERS: [number, number, number][] = [
 ];
 
 export const RHYTHM = {
-  date: "2025-02-13",
-  counter: "A1 — Findel",
-  // Pulled 2026-09-03 from the SHIPPED 14-feature model via the live API. The
-  // previous arrays came from the old 12-feature bundle and matched nothing the
-  // site serves.
+  date: "2025-03-13",
+  // EXACTLY as the app's counter list spells it, not a translation. An earlier
+  // revision read "A6 — Belgian border", which appears nowhere in the picker --
+  // a reader who went to check the claim could not find the counter, and the
+  // one thing this page asks of a sceptic is that they go and check it.
+  counter: "A7 — GRENGEWALD",
+  /** So the claim can be reproduced. Without these the reader has to guess. */
+  posteId: 1486,
+  direction: 1,
+  // Measured 2026-09-15 from the SHIPPED 16-feature 2024 bundle against
+  // actuals/1486.json -- the same model and the same recorded counts the Check
+  // 2025 page serves, so the landing page and the app cannot disagree.
   //
-  // This day is chosen because it is accurate on BOTH measures -- +0.5% on the
-  // daily total AND 3.0% hour by hour. That pairing matters. The day this
-  // section used before showed 0.1% on the total while being 251 veh/h out
-  // hour by hour: it ran 2,118 under through the morning and 2,901 over
-  // through the afternoon, and the two cancelled. A daily total alone cannot
-  // tell an accurate forecast from two large errors pointing opposite ways,
-  // which is why hourlyMae is quoted alongside it.
+  //   daily total   -0.9%   (24,683 predicted against 24,917 recorded)
+  //   hourly MAE    46 veh/h, 4.4% of the mean hour
+  //   peak hour     06:00, 2,044 recorded against 1,963 predicted, -4.0%
+  //
+  // Quoted on BOTH measures deliberately. A daily total alone cannot tell an
+  // accurate forecast from two large errors pointing opposite ways -- an
+  // earlier candidate showed 0.1% on the total while running 251 veh/h out,
+  // 2,118 under through the morning and 2,901 over through the afternoon.
+  //
+  // CAVEAT, and it is the honest one: this is a GOOD day, not a typical one.
+  // Counter 1486 direction 1 has a median absolute daily error of 3.1% across
+  // its 266 complete 2025 days, and this day sits in the best 15% of them. The
+  // lede says so rather than letting the reader generalise from it. Days at the
+  // honest middle of that distribution, if this is ever swapped: 2025-03-28
+  // (-4.5%), 2025-10-06 (-4.5%), 2025-02-13 (-5.2%).
+  //
+  // A7 Grengewald is a good counter to show: 953 veh/h average, the fourth
+  // busiest scoreable car series, and direction 1 runs Waldhof -> Kirchberg, so
+  // the 06:00 spike is the morning commute into the business district.
   actual: [
-    89, 67, 52, 64, 141, 809, 2404, 3042, 2909, 1737, 1131, 1056,
-    1094, 1179, 1154, 989, 1076, 1074, 943, 628, 436, 415, 336, 186,
+    119, 44, 38, 60, 147, 587, 2044, 1985, 1795, 1643, 1386, 1310,
+    1392, 1567, 1464, 1596, 1789, 1754, 1333, 860, 541, 552, 650, 261,
   ],
   predicted: [
-    89, 51, 50, 88, 178, 825, 2421, 2974, 2777, 1766, 1141, 1132,
-    1133, 1177, 1134, 1084, 1082, 1082, 905, 634, 443, 412, 353, 200,
+    106, 71, 38, 67, 151, 579, 1963, 1864, 1665, 1570, 1363, 1327,
+    1397, 1491, 1605, 1653, 1808, 1694, 1419, 893, 580, 536, 592, 251,
   ],
   typical: [
-    96, 55, 51, 89, 176, 829, 2326, 2927, 2767, 1712, 1143, 1122,
-    1124, 1201, 1123, 1068, 1047, 1042, 915, 631, 453, 413, 353, 202,
+    120, 84, 45, 76, 159, 579, 1882, 1741, 1552, 1596, 1353, 1378,
+    1427, 1524, 1601, 1674, 1796, 1687, 1382, 907, 608, 540, 601, 267,
   ],
-  actualTotal: 23011,
-  predictedTotal: 23131,
-  typicalTotal: 22865,
-  peakHour: 7,
-  peakValue: 3042,
+  // Summed FROM the rounded arrays above, not from the model's unrounded
+  // output, so the legend under the chart can never disagree with the curve
+  // the reader is looking at.
+  //
+  // ROUNDING RULE, and it is not pedantry -- it caused a visible mismatch.
+  // These arrays must be produced with JavaScript's Math.round (half away from
+  // zero), because that is what lib/hourly.ts mergeHours() applies to every
+  // hour the app displays. numpy's rint() rounds half to EVEN, so a value of
+  // exactly x.5 lands one vehicle lower. Hour 08 here is 1664.5:
+  //
+  //   np.rint(1664.5)      -> 1664   landing page said 24,682
+  //   Math.round(1664.5)   -> 1665   app says          24,683
+  //
+  // Reported from the app by a reader comparing the two pages. Hour 05 of
+  // `typical` (578.5) had the same defect. Regenerate with
+  // `math.floor(v + 0.5)`, never np.rint.
+  //
+  // A THIRD total exists and is deliberately not used here: the API's own
+  // daily_total field is round(sum(raw)) = 24,684, which differs again because
+  // it rounds once at the end rather than per hour. The app never renders it,
+  // so matching the app means matching the sum of the rounded hours.
+  actualTotal: 24917,
+  predictedTotal: 24683,
+  typicalTotal: 24579,
+  peakHour: 6,
+  peakValue: 2044,
   /** Mean absolute error across the 24 hours -- the honest figure for a chart
    *  of hourly data, and the guard against a flattering cancellation. */
-  hourlyMae: 28,
+  hourlyMae: 46,
 } as const;

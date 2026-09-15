@@ -1,7 +1,14 @@
 import { formatCount, formatHour } from "@/lib/format";
 import type { MergedHour } from "@/lib/types";
 
-/** The chart's own numbers, for anyone who would rather read than eyeball. */
+/**
+ * The chart's own numbers, for anyone who would rather read than eyeball.
+ *
+ * The Pred column is NOT hedged per row -- 24 rows each reading "about 1,240"
+ * would be unreadable, and the tabular-nums alignment that makes the column
+ * scannable would break. One footer line carries the hedge for the whole
+ * column instead, which is also where a reader looks once rather than 24 times.
+ */
 export default function HourlyTable({
   hours,
   dayName,
@@ -41,6 +48,9 @@ export default function HourlyTable({
           ))}
         </tbody>
       </table>
+      <p className="border-t border-[var(--viz-grid)] px-4 py-2.5 text-[11px] leading-snug text-[var(--viz-muted)]">
+        Pred and Usual are estimates, not counts. Real is what the counter recorded.
+      </p>
     </div>
   );
 }

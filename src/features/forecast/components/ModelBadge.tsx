@@ -49,32 +49,46 @@ export default function ModelBadge({
         <span className="text-[var(--viz-muted)]">
           · trained on {product.trainedOn}
         </span>
-      </p>
-
-      <p className="mt-1.5 text-[12.5px] leading-snug text-[var(--viz-muted)]">
-        {product.scoreable ? (
-          <>
-            It has{" "}
-            <strong className="font-semibold text-[var(--viz-ink)]">
-              never seen {product.firstDate.slice(0, 4)}
-            </strong>
-            , so what it predicts here can be checked against what the road
-            actually recorded — and across the whole year it is out by ±
-            {/* One decimal, not formatCount: that rounds to whole vehicles and
-                would print ±13 where every other surface says ±13.0. */}
-            {product.statedError?.toFixed(1)} vehicles an hour.
-          </>
-        ) : (
-          <>
-            It uses the{" "}
-            <strong className="font-semibold text-[var(--viz-ink)]">
-              most recent data
-            </strong>{" "}
-            we hold. Because it learned 2025, it is deliberately <em>not</em>{" "}
-            used for 2025 — and no year is left to score it on.
-          </>
+        {/* The one number that entitles the comparison below. Dropped from the
+            result variant's prose, kept here, so the cut removes words and not
+            the evidence. */}
+        {variant === "result" && product.scoreable && product.statedError !== null && (
+          <span className="text-[var(--viz-muted)]">
+            · ±{product.statedError.toFixed(1)}/h over the unseen year
+          </span>
         )}
       </p>
+
+      {/* The RESULT variant sits directly above the numbers it justifies, where
+          a reader wants the claim and not the argument. The picker variant is
+          read before anything is fetched, so it keeps the full sentence: that
+          is the moment the pairing has to be understood. */}
+      {variant === "picker" && (
+        <p className="mt-1.5 text-[12.5px] leading-snug text-[var(--viz-muted)]">
+          {product.scoreable ? (
+            <>
+              It has{" "}
+              <strong className="font-semibold text-[var(--viz-ink)]">
+                never seen {product.firstDate.slice(0, 4)}
+              </strong>
+              , so what it predicts here can be checked against what the road
+              actually recorded — and across the whole year it is out by ±
+              {/* One decimal, not formatCount: that rounds to whole vehicles and
+                  would print ±13 where every other surface says ±13.0. */}
+              {product.statedError?.toFixed(1)} vehicles an hour.
+            </>
+          ) : (
+            <>
+              It uses the{" "}
+              <strong className="font-semibold text-[var(--viz-ink)]">
+                most recent data
+              </strong>{" "}
+              we hold. Because it learned 2025, it is deliberately <em>not</em>{" "}
+              used for 2025 — and no year is left to score it on.
+            </>
+          )}
+        </p>
+      )}
 
       {variant === "picker" && (
         <p className="label-mono mt-2 leading-tight text-[var(--viz-muted)]">

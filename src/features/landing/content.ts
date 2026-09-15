@@ -6,6 +6,7 @@
  * for effect, so this file is also the place to check a claim against the data.
  */
 
+import { weekdayName } from "@/lib/format";
 import { RHYTHM } from "./data/landing-data";
 
 /** The four figures under "The evidence". */
@@ -88,8 +89,10 @@ export const CHART_LINES = [
   {
     color: "var(--viz-baseline)",
     dashed: true,
-    title: "A usual Wednesday",
-    body: "Not one particular day. It averages every Wednesday this counter recorded in 2024, hour by hour — the 08:00 figure averages all the Wednesday 08:00s.",
+    // Derived from RHYTHM.date for the same reason as the legend below: this
+    // described the chart as a Wednesday while the chart plotted a Thursday.
+    title: `A usual ${weekdayName(RHYTHM.date)}`,
+    body: `Not one particular day. It averages every ${weekdayName(RHYTHM.date)} this counter recorded in 2024, hour by hour — the 08:00 figure averages all the ${weekdayName(RHYTHM.date)} 08:00s.`,
   },
 ] as const;
 
@@ -142,5 +145,13 @@ export const RHYTHM_TOTALS = [
   { key: "Predicted", value: RHYTHM.predictedTotal, color: "var(--viz-series)", dashed: false },
   // Dashed here as well as in the chart: the baseline's identity must never
   // rest on colour alone.
-  { key: "A usual Wednesday", value: RHYTHM.typicalTotal, color: "var(--viz-baseline)", dashed: true },
+  // DERIVED, not typed. This read "A usual Wednesday" while RHYTHM.date was a
+  // Thursday -- the label had been left behind by an earlier example day, and a
+  // legend that names the wrong weekday discredits the chart above it.
+  {
+    key: `A usual ${weekdayName(RHYTHM.date)}`,
+    value: RHYTHM.typicalTotal,
+    color: "var(--viz-baseline)",
+    dashed: true,
+  },
 ] as const;

@@ -42,13 +42,17 @@ export default function ForecastPanel({
     vehicule,
     product.scoreable,
   );
-  const { meta, hours, loading, error, run, clearError } = useForecastRun({
+  // `product` goes in whole rather than model + scoreable: the model is no
+  // longer decided by the page alone. On the forecasting page a date one or two
+  // days past this series' last recorded hour is answered by the 24h or 48h
+  // model instead, and the hook needs the page's own model as the fallback.
+  // See features/forecast/lib/engine.ts.
+  const { meta, hours, outcome, loading, error, run, clearError } = useForecastRun({
     poste_id: site.poste_id,
     direction,
     vehicule,
     date,
-    model: product.model,
-    scoreable: product.scoreable,
+    product,
   });
 
   const summary = hours ? summariseDay(hours) : null;
@@ -75,7 +79,7 @@ export default function ForecastPanel({
         aria-modal="true"
         aria-label={`Forecast for ${site.route} at ${site.localite}`}
         tabIndex={-1}
-        className="ring-hairline-lg fixed inset-y-0 right-0 z-[1000] flex w-full max-w-[540px] flex-col bg-[var(--viz-plane)] outline-none animate-[slideIn_.3s_cubic-bezier(.22,1,.36,1)]"
+        className="ring-hairline-lg fixed inset-y-0 right-0 z-[1000] flex w-full max-w-[540px] flex-col bg-[var(--viz-plane)] outline-none animate-[slideIn_.3s_cubic-bezier(.22,1,.36,1)] overflow-auto"
       >
         <PanelHeader site={site} heading={series?.sens} onClose={onClose} />
 
@@ -104,7 +108,7 @@ export default function ForecastPanel({
           onRun={run}
         />
 
-        <div className="thin-scroll flex-1 overflow-y-auto px-6 py-5">
+        <div className="thin-scroll flex-1  px-6 py-5">
           {error && (
             <ErrorNotice title="Could not forecast" message={error} size="sm" />
           )}
@@ -145,6 +149,7 @@ export default function ForecastPanel({
               meta={meta}
               hours={hours}
               summary={summary}
+              outcome={outcome}
             />
           )}
         </div>

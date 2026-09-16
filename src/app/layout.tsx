@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
@@ -66,7 +67,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${display.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+        {/* Page views only -- no custom events are sent from anywhere in this
+            app. It injects nothing outside Vercel, and on a non-Vercel host the
+            script simply never loads, so local `next dev` and `next build` are
+            unaffected.
+
+            Last in the body rather than in <head>: it is not needed to render
+            anything, and the fonts above are deliberately self-hosted to keep
+            third-party origins out of the CSP -- this adds one back, so it is
+            worth knowing it is here if that policy is ever tightened. */}
+        <Analytics />
+      </body>
     </html>
   );
 }

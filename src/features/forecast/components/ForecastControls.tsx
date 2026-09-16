@@ -1,5 +1,6 @@
 "use client";
 
+import DateInput from "@/components/ui/DateInput";
 import Segmented from "@/components/ui/Segmented";
 import Spinner from "@/components/ui/Spinner";
 import { ArrowRightIcon } from "@/components/ui/icons";
@@ -65,22 +66,23 @@ export default function ForecastControls({
                 2029 without saying why reads as broken. */}
             <span className="label-mono mb-2 flex items-baseline justify-between gap-2">
               <span>Date to forecast</span>
-              <span className="text-[var(--viz-muted)]">{product.dateLabel}</span>
+              <span className="text-[var(--viz-muted)]">
+                {product.dateLabel}
+              </span>
             </span>
-            <input
-              type="date"
+            <DateInput
               value={date}
               min={product.firstDate}
               max={product.lastDate}
               onChange={(e) => onDateChange(clampDate(product, e.target.value))}
-              className="w-full rounded-[var(--r-control)] border border-[var(--viz-hairline)] bg-[var(--viz-plane)] px-3.5 py-3 text-sm text-[var(--viz-ink)] outline-none transition focus:border-[var(--viz-series)] focus:bg-[var(--viz-surface)] focus:ring-4 focus:ring-[var(--viz-series)]/12"
+              className="w-full cursor-pointer rounded-[var(--r-control)] border border-[var(--viz-hairline)] bg-[var(--viz-plane)] px-3.5 py-3 text-sm text-[var(--viz-ink)] outline-none transition focus:border-[var(--viz-series)] focus:bg-[var(--viz-surface)] focus:ring-4 focus:ring-[var(--viz-series)]/12"
             />
           </label>
 
           {/* Which model will answer, stated BEFORE the request. The error
               figure that comes back only means something if the reader knows
               the model never saw the year being predicted. */}
-          <ModelBadge product={product} variant="picker" />
+          {/* <ModelBadge product={product} variant="picker" /> */}
 
           {/* Only where a recorded count could exist. On the forecasting page
               nothing is fetched and `loaded` stays false, so this renders

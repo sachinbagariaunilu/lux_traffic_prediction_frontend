@@ -16,7 +16,35 @@ import type { Product } from "../lib/products";
  * test applied: if a sentence would change what a reader DOES with the number,
  * it is visible; if it explains why the number is what it is, it is in the
  * drawer.
+ *
+ * The drawer used to open with a paragraph restating the visible one in other
+ * words -- what the model reads from the calendar, and what it does not know.
+ * Its one load-bearing sentence ("read it as a Tuesday like this one, as busy
+ * as 2024-2025 was") is now IN the visible text, where it turns the claim into
+ * an instruction, and the rest went. A drawer whose first paragraph repeats the
+ * paragraph above it teaches the reader that opening it is not worth doing.
  */
+/**
+ * HIDDEN 2026-09-16, at the user's request, "for now". Flip to true to restore;
+ * nothing else has to change and no markup was deleted.
+ *
+ * Annotated `: boolean` on purpose -- as a bare `false` TypeScript narrows it to
+ * the literal type and reads everything below as unreachable.
+ *
+ * WHAT IS SWITCHED OFF, so the decision can be re-taken with it in view: this
+ * block is the only place the page says the forecast sits at the model's
+ * TRAINED volumes with no growth added. Without it a reader sees a 2026 number
+ * with nothing indicating it runs ~0.5% low, and the drawer's two measured
+ * caveats -- the 0-1% growth range, and the 11.4%/-3.3% sensor check -- have no
+ * other home in the UI. The verdict above still says the day cannot be scored,
+ * so the "nothing to compare against" fact survives; the LEVEL fact does not.
+ *
+ * Only the projection branch is gated. The other branch -- a past date the
+ * counter failed to report -- is a different message about a different
+ * situation and still renders.
+ */
+const SHOW_PROJECTION_NOTE: boolean = false;
+
 export default function ProjectionNote({
   product,
   date,
@@ -37,48 +65,50 @@ export default function ProjectionNote({
   if (!projection) {
     return (
       <p className="bg-[var(--viz-surface)] px-4 py-3 text-[11.5px] leading-relaxed text-[var(--viz-ink-2)] ring-1 ring-[var(--viz-border)]">
-        This counter did not report on {date}, so there is nothing to score the forecast
-        against. The forecast itself still stands.
+        This counter recorded nothing on {date}, so there is no real count to compare
+        the forecast with. The forecast itself is unaffected.
       </p>
     );
   }
 
+  if (!SHOW_PROJECTION_NOTE) return null;
+
   return (
     <div className="space-y-2">
       <p className="bg-[var(--viz-surface)] px-4 py-3 text-[11.5px] leading-relaxed text-[var(--viz-ink-2)] ring-1 ring-[var(--viz-border)]">
-        <strong className="font-semibold text-[var(--viz-ink)]">Projection.</strong>{" "}
-        Built from this counter&apos;s {product.levelLabel} traffic levels, applied to the{" "}
-        {year} calendar.
+        <strong className="font-semibold text-[var(--viz-ink)]">
+          This day hasn&apos;t happened yet,
+        </strong>{" "}
+        so there is nothing to check the forecast against. We take how busy this
+        counter was in {product.levelLabel} and apply the {year} calendar — the day
+        of the week, and the holidays. So read it as: a {dayName} like this one, as
+        busy as {product.levelLabel} was.
         {shortfall && (
           <>
             {" "}
-            Likely <strong className="font-semibold text-[var(--viz-ink)]">
-              {shortfall.central}% low
+            Traffic grows a little each year and we do not add that on, so the
+            real count is probably about{" "}
+            <strong className="font-semibold text-[var(--viz-ink)]">
+              {shortfall.central}% higher
             </strong>{" "}
-            for {year}.
+            than this.
           </>
         )}
       </p>
 
-      <Disclosure label="What this figure assumes">
+      <Disclosure label="How much could it be off?">
         <div className="space-y-2.5 bg-[var(--viz-surface)] px-4 py-3.5 text-[11.5px] leading-relaxed text-[var(--viz-ink-2)] ring-1 ring-[var(--viz-border)]">
-          <p>
-            The model reads the {year} calendar — weekday, public and school holidays,
-            distance to the nearest one — but its traffic volumes are this
-            counter&apos;s {product.levelLabel} volumes. There is no trend term, so read
-            it as “a {dayName} like this, at {product.levelLabel} volumes”.
-          </p>
-
           {shortfall && (
             <p>
-              Traffic has grown since — roughly{" "}
+              We could only measure two years of growth and they disagreed, so by{" "}
+              {year} anything from 0% to {shortfall.high}% fits —{" "}
               <strong className="font-semibold text-[var(--viz-ink)]">
                 {shortfall.central}%
               </strong>{" "}
-              by {year}, though the two years we could measure disagreed enough that
-              anything from 0% to {shortfall.high}% fits the data. On a single hour
-              that gap is noise; summed over a network-year it never cancels, so add it
-              back for totals, not for the figures on this page.
+              is the middle. For a single hour that is a vehicle or two, too small to
+              matter. Across a whole year and every counter it adds up instead of
+              cancelling out, so add it back for big totals, not for the numbers on
+              this page.
             </p>
           )}
 
@@ -87,13 +117,14 @@ export default function ProjectionNote({
               read as one the moment the two are separated. */}
           {product.measured && (
             <p>
-              Checked against traffic no model had seen — {product.measured.where} — it
-              was out by{" "}
+              We did test it against real traffic it had never seen —{" "}
+              {product.measured.where}. In a typical hour it was out by{" "}
               <strong className="font-semibold text-[var(--viz-ink)]">
                 {product.measured.errPct}%
-              </strong>{" "}
-              an hour and ran {Math.abs(product.measured.shortfallPct)}% below what the
-              road recorded. Three counters over two months, not the whole network.
+              </strong>
+              , and it counted {Math.abs(product.measured.shortfallPct)}% fewer
+              vehicles than the road really saw. That is three counters over two
+              months, not the whole network.
             </p>
           )}
         </div>

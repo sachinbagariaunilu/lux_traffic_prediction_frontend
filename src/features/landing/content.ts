@@ -108,7 +108,7 @@ export const LIMITS = [
   },
   {
     title: "The forecast page has no stated error",
-    body: "The 2024-only model can quote ±13.0 vehicles/hour because 2025 measured it. The 2024 + 2025 model trained on every year we hold counts for, so there is no unseen year left to measure it on, and that page shows no ± figure rather than borrowing one. What we do know comes from roadside sensors in June and July 2026, where it averaged 11.4% error against 12.5% for the 2024-only model — three counters, two months, not the whole network.",
+    body: "The 2024-only model can quote ±13.0 vehicles/hour because 2025 measured it. The 2024 + 2025 model trained on every year we hold counts for, so there is no unseen year left to measure it on, and that page shows no ± figure rather than borrowing one.",
   },
   {
     title: "No date is answered by both models",

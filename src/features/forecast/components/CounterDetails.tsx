@@ -1,4 +1,5 @@
 import DefinitionRow from "@/components/ui/DefinitionRow";
+import { MapPinIcon } from "@/components/ui/icons";
 import { formatCount } from "@/lib/format";
 import { lurefToLatLon } from "@/lib/luref";
 import type { CounterSeries, ForecastResponse } from "@/lib/types";
@@ -48,10 +49,27 @@ export default function CounterDetails({
           {Math.round(series.coord_x)}, {Math.round(series.coord_y)}
         </span>
       </DefinitionRow>
+      {/* The degrees double as a pin on Google Maps -- a site check sitting one
+          row below the LUREF metres they were reprojected from, so a bad
+          conversion shows up as a pin in the wrong place. It confirms WHICH
+          ROAD, never which direction; see PanelHeader for why that distinction
+          has already cost this project once.
+          6dp in the href (~0.1 m), 5dp in the label to keep the row narrow. */}
       <DefinitionRow term="Lat, lon">
-        <span className="tabular-nums">
-          {lat.toFixed(5)}, {lon.toFixed(5)}
-        </span>
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${lat.toFixed(6)},${lon.toFixed(6)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1"
+          title="Open this counter in Google Maps"
+        >
+          {/* Icon OUTSIDE the underline -- an inline-flex underline would run
+              under the pin and the gap too, which reads as a rendering fault. */}
+          <MapPinIcon className="shrink-0 text-[var(--viz-muted)]" />
+          <span className="tabular-nums underline decoration-dotted underline-offset-2">
+            {lat.toFixed(5)}, {lon.toFixed(5)}
+          </span>
+        </a>
       </DefinitionRow>
       {/* Named from the API's own answer (`meta.model`), not from the product,
           so a mismatch between the page and what actually replied would be

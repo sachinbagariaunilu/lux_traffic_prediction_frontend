@@ -52,11 +52,13 @@ export default function ModelBadge({
         {/* The one number that entitles the comparison below. Dropped from the
             result variant's prose, kept here, so the cut removes words and not
             the evidence. */}
-        {variant === "result" && product.scoreable && product.statedError !== null && (
-          <span className="text-[var(--viz-muted)]">
-            · ±{product.statedError.toFixed(1)}/h over the unseen year
-          </span>
-        )}
+        {variant === "result" &&
+          product.scoreable &&
+          product.statedError !== null && (
+            <span className="text-[var(--viz-muted)]">
+              · ±{product.statedError.toFixed(1)}/h over the unseen year
+            </span>
+          )}
       </p>
 
       {/* The RESULT variant sits directly above the numbers it justifies, where

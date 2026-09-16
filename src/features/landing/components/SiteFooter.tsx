@@ -1,5 +1,4 @@
-import { LinkedInIcon } from "@/components/ui/icons";
-import { AUTHOR_URL, DATASET_NAME, DATASET_URL } from "../content";
+import { DATASET_NAME, DATASET_URL } from "../content";
 
 export default function SiteFooter() {
   return (
@@ -18,16 +17,6 @@ export default function SiteFooter() {
           · CC0
         </span>
         <span className="label-mono">Trained through 2024-12-31</span>
-
-        <a
-          href={AUTHOR_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="pill-quiet group label-mono ml-auto py-2 pl-3 pr-4 text-[var(--viz-ink-2)]"
-        >
-          <LinkedInIcon className="transition group-hover:text-[var(--lux-blue)]" />
-          Built by Sachin Bagaria
-        </a>
       </div>
     </footer>
   );

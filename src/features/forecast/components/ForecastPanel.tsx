@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import ErrorNotice from "@/components/ui/ErrorNotice";
 import type { CounterSite } from "@/lib/types";
 import { useForecastRun } from "../hooks/useForecastRun";
@@ -23,6 +23,57 @@ import SeriesPicker from "./SeriesPicker";
  * `product`: which model to ask, which years the date field offers, and whether
  * a recorded count can exist to score the answer against.
  */
+/**
+ * Panel width, remembered between openings.
+ *
+ * An EXTERNAL STORE rather than state-plus-effect. localStorage cannot be read
+ * while rendering -- the server has none, so the markup would disagree with the
+ * first client render and React would throw the prerender away. Reading it in
+ * an effect instead means a setState on every mount, which is the cascading
+ * render `react-hooks/set-state-in-effect` exists to stop. useSyncExternalStore
+ * is the case both of those are pointing at: a server snapshot of `false`, a
+ * client snapshot from storage, and React reconciling the two itself.
+ *
+ * Storage can throw outright (private mode, blocked site data) and every access
+ * is guarded. The panel still resizes when it does; only the memory is lost.
+ *
+ * Module scope, not a hook: the panel is a singleton, so there is exactly one
+ * value and caching it keeps getSnapshot cheap -- React calls it often, and a
+ * synchronous localStorage read on each call is the kind of thing that only
+ * shows up on a slow machine.
+ */
+const WIDE_KEY = "lux.panel.wide";
+let wideCache: boolean | null = null;
+const wideListeners = new Set<() => void>();
+
+function readWide(): boolean {
+  if (wideCache === null) {
+    try {
+      wideCache = localStorage.getItem(WIDE_KEY) === "1";
+    } catch {
+      wideCache = false;
+    }
+  }
+  return wideCache;
+}
+
+function writeWide(next: boolean) {
+  wideCache = next;
+  try {
+    localStorage.setItem(WIDE_KEY, next ? "1" : "0");
+  } catch {
+    /* not remembered, but the panel still resizes */
+  }
+  wideListeners.forEach((l) => l());
+}
+
+function subscribeWide(cb: () => void) {
+  wideListeners.add(cb);
+  return () => {
+    wideListeners.delete(cb);
+  };
+}
+
 export default function ForecastPanel({
   product,
   site,
@@ -58,6 +109,10 @@ export default function ForecastPanel({
   const summary = hours ? summariseDay(hours) : null;
   const panelRef = useRef<HTMLElement>(null);
 
+  // Server snapshot is `false` -- the prerendered HTML is always the narrow
+  // panel, and a stored preference widens it after hydration.
+  const wide = useSyncExternalStore(subscribeWide, readWide, () => false);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
@@ -79,9 +134,21 @@ export default function ForecastPanel({
         aria-modal="true"
         aria-label={`Forecast for ${site.route} at ${site.localite}`}
         tabIndex={-1}
-        className="ring-hairline-lg fixed inset-y-0 right-0 z-[1000] flex w-full max-w-[540px] flex-col bg-[var(--viz-plane)] outline-none animate-[slideIn_.3s_cubic-bezier(.22,1,.36,1)] overflow-auto"
+        // max-width is what moves, not width. Below md the cap stays at 540px,
+        // which is deliberate: 80vw is only WIDER than 540px above 675px of
+        // viewport, so applying it lower down would narrow the panel. The
+        // toggle hides on the same breakpoint -- see PanelHeader.
+        className={`ring-hairline-lg fixed inset-y-0 right-0 z-[1000] flex w-full flex-col bg-[var(--viz-plane)] outline-none animate-[slideIn_.3s_cubic-bezier(.22,1,.36,1)] overflow-auto transition-[max-width] duration-300 ease-out ${
+          wide ? "max-w-[540px] md:max-w-[80vw]" : "max-w-[540px]"
+        }`}
       >
-        <PanelHeader site={site} heading={series?.sens} onClose={onClose} />
+        <PanelHeader
+          site={site}
+          heading={series?.sens}
+          onClose={onClose}
+          wide={wide}
+          onToggleWide={() => writeWide(!wide)}
+        />
 
         <ForecastControls
           product={product}
@@ -145,6 +212,8 @@ export default function ForecastPanel({
               date={date}
               direction={direction}
               vehicule={vehicule}
+              vehicles={selection.vehicles}
+              directions={selection.directions}
               series={series}
               meta={meta}
               hours={hours}

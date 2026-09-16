@@ -170,16 +170,6 @@ export default function TwoPagesSection() {
         })}
       </div>
 
-      <Reveal delay={200}>
-        <p className="mt-7 max-w-[64ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
-          The counter lists differ by three: 607 Marnach, 1414 France Frontière and
-          1444 Schifflange only started reporting during 2025, so the 2024-only model
-          has no history for them and refuses to guess — a counter&rsquo;s traffic
-          volume cannot be read off its location. They appear on the forecast page
-          only. The API enforces all of this independently: asking the 2024 + 2025
-          model about a 2025 date is refused, not answered.
-        </p>
-      </Reveal>
     </SectionShell>
   );
 }

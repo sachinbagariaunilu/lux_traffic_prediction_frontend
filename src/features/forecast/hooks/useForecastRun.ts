@@ -48,6 +48,81 @@ export interface EngineOutcome {
  * traffic and is more accurate there. engine.ts owns that decision and explains
  * it; this hook performs it, and falls back when the lag service refuses.
  */
+/**
+ * One forecast, routed and merged -- the hook's body, lifted out so a SECOND
+ * caller can ask for another series on the same terms.
+ *
+ * It exists for the report download, which needs both vehicle classes while the
+ * panel only ever holds the selected one. Duplicating the routing there would
+ * have let the two drift, and the drift would be invisible: the file names no
+ * model, so a download whose C came from the long-horizon model and whose V
+ * came from lead-24 would look exactly like one where both agreed.
+ *
+ * `acts` is passed IN rather than fetched here because one ActualsFile covers
+ * every series at the counter -- fetching per vehicle would pull the same file
+ * twice.
+ */
+export async function runForecast(
+  { poste_id, direction, vehicule, date, product }: ForecastRequest,
+  acts: ActualsFile | null,
+): Promise<{
+  meta: ForecastResponse;
+  hours: MergedHour[];
+  outcome: EngineOutcome;
+}> {
+  // Decided from the DATE alone. Which series still had counts on the last
+  // recorded day is the lag service's business now, because it is the one
+  // holding them -- it answers 404 for a counter that stopped reporting
+  // early, and the fallback below catches it. Asking the browser to work
+  // that out meant downloading the data twice to find out.
+  const wanted = chooseEngine(product, date);
+
+  let meta: ForecastResponse;
+  let outcome: EngineOutcome = { engine: wanted, fellBack: null };
+
+  if (wanted.kind === "lag") {
+    try {
+      const res = await fetchLagForecast(
+        wanted.lead,
+        poste_id,
+        direction,
+        vehicule,
+        date,
+      );
+      meta = normaliseLagResponse(res, date);
+      // The service assembled the history, so only IT knows which window
+      // was used. Carried back onto the engine so EngineNote can name the
+      // date instead of saying "recent counts" vaguely.
+      outcome = {
+        engine: { ...wanted, lastObserved: res.history_through?.slice(0, 10) },
+        fellBack: null,
+      };
+    } catch (e) {
+      // 422 date outside the snapshot, 404 this series stopped reporting
+      // early, 503 no snapshot deployed, 0 service unreachable. All four
+      // are recoverable: the long-horizon model needs no history and can
+      // answer this date. Anything else is a real fault and surfaces.
+      const recoverable =
+        e instanceof ApiError && [0, 404, 422, 503].includes(e.status);
+      if (!recoverable) throw e;
+      const fallback: Engine = { kind: "forecast", model: product.model };
+      meta = await fetchForecast(poste_id, direction, vehicule, date, product.model);
+      outcome = {
+        engine: fallback,
+        fellBack: { from: wanted, reason: (e as ApiError).message },
+      };
+    }
+  } else {
+    meta = await fetchForecast(poste_id, direction, vehicule, date, product.model);
+  }
+
+  return {
+    meta,
+    hours: mergeHours(meta, acts, direction, vehicule, date),
+    outcome,
+  };
+}
+
 export function useForecastRun({
   poste_id,
   direction,
@@ -80,69 +155,14 @@ export function useForecastRun({
         ? await fetchActuals(poste_id)
         : null;
 
-      // Decided from the DATE alone. Which series still had counts on the last
-      // recorded day is the lag service's business now, because it is the one
-      // holding them -- it answers 404 for a counter that stopped reporting
-      // early, and the fallback below catches it. Asking the browser to work
-      // that out meant downloading the data twice to find out.
-      const wanted = chooseEngine(product, date);
-
-      let meta: ForecastResponse;
-      let outcome: EngineOutcome = { engine: wanted, fellBack: null };
-
-      if (wanted.kind === "lag") {
-        try {
-          const res = await fetchLagForecast(
-            wanted.lead,
-            poste_id,
-            direction,
-            vehicule,
-            date,
-          );
-          meta = normaliseLagResponse(res, date);
-          // The service assembled the history, so only IT knows which window
-          // was used. Carried back onto the engine so EngineNote can name the
-          // date instead of saying "recent counts" vaguely.
-          outcome = {
-            engine: { ...wanted, lastObserved: res.history_through?.slice(0, 10) },
-            fellBack: null,
-          };
-        } catch (e) {
-          // 422 date outside the snapshot, 404 this series stopped reporting
-          // early, 503 no snapshot deployed, 0 service unreachable. All four
-          // are recoverable: the long-horizon model needs no history and can
-          // answer this date. Anything else is a real fault and surfaces.
-          const recoverable =
-            e instanceof ApiError && [0, 404, 422, 503].includes(e.status);
-          if (!recoverable) throw e;
-          const fallback: Engine = { kind: "forecast", model: product.model };
-          meta = await fetchForecast(
-            poste_id,
-            direction,
-            vehicule,
-            date,
-            product.model,
-          );
-          outcome = {
-            engine: fallback,
-            fellBack: { from: wanted, reason: (e as ApiError).message },
-          };
-        }
-      } else {
-        meta = await fetchForecast(
-          poste_id,
-          direction,
-          vehicule,
-          date,
-          product.model,
-        );
-      }
+      const res = await runForecast(
+        { poste_id, direction, vehicule, date, product },
+        acts,
+      );
 
       setState({
         key: `${poste_id}|${direction}|${vehicule}|${date}|${product.id}`,
-        meta,
-        hours: mergeHours(meta, acts, direction, vehicule, date),
-        outcome,
+        ...res,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");

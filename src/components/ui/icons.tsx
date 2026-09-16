@@ -1,5 +1,5 @@
 /**
- * The seven icons this app uses, inline. Cheaper as JSX than an icon font, a
+ * The icons this app uses, inline. Cheaper as JSX than an icon font, a
  * sprite sheet or a dependency, and they stay in step with the type scale
  * because every one takes its colour from `currentColor` and its size from a
  * prop. All are decorative: the label always sits in the text beside them.
@@ -80,6 +80,31 @@ export function AlertIcon({ size = 16, className }: IconProps) {
     <Svg size={size} className={className} strokeWidth={2}>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 8v5M12 16.5v.01" />
+    </Svg>
+  );
+}
+
+export function MapPinIcon({ size = 11, className }: IconProps) {
+  return (
+    <Svg size={size} className={className} strokeWidth={2}>
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </Svg>
+  );
+}
+
+export function ExpandIcon({ size = 15, className }: IconProps) {
+  return (
+    <Svg size={size} className={className} strokeWidth={2}>
+      <path d="m9 7-5 5 5 5M15 7l5 5-5 5" />
+    </Svg>
+  );
+}
+
+export function CollapseIcon({ size = 15, className }: IconProps) {
+  return (
+    <Svg size={size} className={className} strokeWidth={2}>
+      <path d="m20 7-5 5 5 5M4 7l5 5-5 5" />
     </Svg>
   );
 }

@@ -57,6 +57,25 @@
   --viz-actual: #d9541f;    /* slot 2 -- recorded truth */
   --viz-baseline: #8b887e;  /* context, always dashed */
 
+  /* Comparison chart only. The two names above carry MEANINGS (predicted /
+     recorded truth) that do not survive a chart where every line is a
+     prediction for a different day -- hence a separate, purely categorical
+     ramp that happens to reuse their two hues plus one more.
+
+     ONE new hue, and it was computed rather than chosen. Validated as a
+     3-slot categorical palette against BOTH real surfaces (#ffffff and
+     #171717): lightness band, chroma floor, all-pairs CVD separation
+     (worst dE 9.6 deutan / 9.2 tritan, target >= 8), normal-vision floor
+     (22.7) and >= 3:1 contrast all pass on both. The lighter aqua #1baf7a
+     reads 2.82:1 on white and was rejected for it.
+
+     Slots are assigned per LINE and held until that line is removed --
+     never by array index, or deleting the middle line would repaint the
+     survivors and silently re-label the chart. */
+  --viz-cmp-1: #1f6ac4;
+  --viz-cmp-2: #d9541f;
+  --viz-cmp-3: #199e70;
+
   /* Status is fixed and never doubles as a series colour. */
   --status-warn: #8f5c05;
   --status-bad: #c0271f;

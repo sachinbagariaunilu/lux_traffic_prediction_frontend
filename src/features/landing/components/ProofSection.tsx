@@ -61,13 +61,6 @@ export default function ProofSection() {
         </figure>
       </Reveal>
 
-      <Reveal delay={120}>
-        <p className="mt-7 max-w-[64ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
-          Picked as the model&rsquo;s best Wednesday at this counter, out of 49. It is not
-          typical — the same model ran 11% high on a March Wednesday. Check 2025 shows
-          you both kinds of day.
-        </p>
-      </Reveal>
     </SectionShell>
   );
 }

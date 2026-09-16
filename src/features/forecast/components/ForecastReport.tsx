@@ -1,34 +1,27 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Disclosure from "@/components/ui/Disclosure";
-import Spinner from "@/components/ui/Spinner";
 import { longDate, weekdayName } from "@/lib/format";
-import type { CounterSeries, ForecastResponse, MergedHour } from "@/lib/types";
+import type {
+  CounterSeries,
+  ForecastResponse,
+  MergedHour,
+  VehiculeCode,
+} from "@/lib/types";
 import { vehicleLabel } from "../lib/constants";
 import type { EngineOutcome } from "../hooks/useForecastRun";
 import type { Product } from "../lib/products";
 import type { DaySummary } from "../lib/hourly";
+import type { ComparisonLine } from "../lib/comparison";
 import BaselineExplainer from "./BaselineExplainer";
+import ComparisonSection from "./ComparisonSection";
 import CounterDetails from "./CounterDetails";
+import DownloadReportButton from "./DownloadReportButton";
 import EngineNote from "./EngineNote";
 import ModelBadge from "./ModelBadge";
 import ProjectionNote from "./ProjectionNote";
-import ForecastStats from "./ForecastStats";
 import ForecastVerdict from "./ForecastVerdict";
 import HourlyTable from "./HourlyTable";
-
-// Recharts is by far the heaviest thing on this route and nothing can be
-// charted until a forecast comes back, so it loads alongside that request
-// instead of sitting in the /map entry chunk.
-const HourlyChart = dynamic(() => import("./HourlyChart"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex h-[300px] items-center justify-center">
-      <Spinner />
-    </div>
-  ),
-});
 
 /**
  * The answer, in the order it should be read: what day this is, the verdict in
@@ -43,6 +36,8 @@ export default function ForecastReport({
   date,
   direction,
   vehicule,
+  vehicles,
+  directions,
   series,
   meta,
   hours,
@@ -53,6 +48,10 @@ export default function ForecastReport({
   date: string;
   direction: number;
   vehicule: string;
+  /** Classes existing at this counter/direction -- the download covers them all. */
+  vehicles: VehiculeCode[];
+  /** Directions this counter has, for the comparison control. */
+  directions: number[];
   series?: CounterSeries;
   meta: ForecastResponse;
   hours: MergedHour[];
@@ -69,6 +68,23 @@ export default function ForecastReport({
   // so it carries current levels rather than the training years' -- the growth
   // shortfall block below is about the page model and does not apply to it.
   const lagAnswered = outcome?.engine.kind === "lag";
+  // The answer already on screen, in the shape the comparison uses. It holds
+  // colour slot 0 and cannot be removed -- it IS the report.
+  const baseLine: ComparisonLine | null =
+    series && outcome
+      ? {
+          id: "base",
+          slot: 0,
+          date,
+          weekday: dayName,
+          direction,
+          vehicule: vehicule as VehiculeCode,
+          hours,
+          summary,
+          outcome,
+          product,
+        }
+      : null;
 
   return (
     <div className="stagger space-y-4">
@@ -88,6 +104,25 @@ export default function ForecastReport({
           {vehicleLabel(vehicule)} ({vehicule}) · Direction {direction}
           {series ? ` — ${series.sens}` : ""}
         </p>
+        {/* Inside this block, NOT a sibling of it: every direct child of
+            `.stagger` is one step of the entrance animation, so a new child
+            would shift the sequence for a control that is not part of the
+            reading order. The line above names one series; the download covers
+            the whole direction, which is why it sits directly under it. */}
+        {series && (
+          <div className="mt-3">
+            <DownloadReportButton
+              product={product}
+              date={date}
+              weekday={dayName}
+              series={series}
+              vehicule={vehicule as VehiculeCode}
+              vehicles={vehicles}
+              hours={hours}
+              isHolidayPeriod={meta.is_holiday_period}
+            />
+          </div>
+        )}
       </div>
 
       {/* Immediately under the verdict, because the verdict is a claim about
@@ -114,11 +149,21 @@ export default function ForecastReport({
         projection={projection}
       />
 
-      <ForecastStats summary={summary} />
+      {/* The chart lives INSIDE this section now. It owns which one to draw:
+          the single-day HourlyChart, or ComparisonChart once another day has
+          been added -- and ComparisonChart already includes this day, so two
+          charts would have drawn the same series twice.
 
-      <div className="bg-[var(--viz-surface)] px-4 py-4 ring-1 ring-[var(--viz-border)]">
-        <HourlyChart hourly={hours} dayName={dayName} />
-      </div>
+          One child of .stagger where there used to be two, so the entrance
+          sequence is one step shorter. */}
+      {baseLine && series && (
+        <ComparisonSection
+          base={baseLine}
+          series={series}
+          directions={directions}
+          vehicles={vehicles}
+        />
+      )}
 
       {/* Why there is no recorded line to compare against. Short claim visible,
           argument behind a dropdown -- this was ~150 words of always-open prose

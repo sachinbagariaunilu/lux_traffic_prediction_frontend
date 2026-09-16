@@ -87,20 +87,44 @@ export default function HeroSection() {
         <div className="mt-auto grid items-center gap-8 pb-10 pt-6 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
           <div>
             <Reveal delay={120}>
+              {/* Two parties, two clauses -- and the second one is the offer.
+                  "more evidence" could head any data product; this pair could
+                  only head THIS one, because what is rare here is not accuracy
+                  but that the 2025 half is open to inspection at all.
+
+                  It also survives the honesty test the rest of the page is
+                  built around: it promises no error figure, only that the
+                  reader may look. `em` drops line two to muted ink, which is
+                  what keeps "you check." an invitation rather than an order --
+                  and the filled button directly below it is the way in. */}
               <h1 className="hero-display max-w-[14ch]">
-                less guessing<i>.</i>
+                we predict<i>.</i>
                 <br />
-                <em>more evidence<i>.</i></em>
+                <em>you check<i>.</i></em>
               </h1>
             </Reveal>
 
             <Reveal delay={200}>
+              {/* The claim above is "more evidence", so the lede has to hand over
+                  the evidence rather than describe the project. Three changes
+                  from the version that read "we taught a model the rhythm of a
+                  country's roads":
+
+                  - the unseen year is now SAID, not implied. "Having never seen
+                    a single hour of it" is the whole reason a 2025 number can be
+                    checked at all, and without it "predicts 2025" sounds like a
+                    model quoting data it already had.
+                  - "marked" became "check". It is schoolroom English and most
+                    readers here have English as a second or third language.
+                  - "two models on two pages" went. Pages are this site's
+                    architecture, not the reader's concern; the two links below
+                    already make the split obvious. */}
               <p className="lede mt-7 max-w-[46ch]">
-                We taught a model the rhythm of a country&rsquo;s roads.{" "}
-                {FORECAST_2026.sites} counters across Luxembourg, every hour of 2024
-                and 2025. From them, two models on two pages: one predicts 2025 and can
-                be marked against what the road actually recorded, the other forecasts
-                2026 to 2028 and admits there is nothing left to mark it with.
+                We trained a model on {FORECAST_2026.sites} Luxembourg counters —
+                every hour of 2024 and 2025. One version predicts 2025 having never
+                seen a single hour of it, so you can check it against what the road
+                really recorded. The other forecasts 2026 to 2028, where there is
+                nothing to check it against yet, and says so.
               </p>
             </Reveal>
 

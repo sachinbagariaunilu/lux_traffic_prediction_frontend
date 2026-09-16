@@ -10,11 +10,11 @@ export default function ReadingSection() {
       eyebrow="Reading a forecast"
       heading={<>Every hour carries three numbers.</>}
     >
-      <div className="mt-14 grid gap-14 lg:grid-cols-[1.15fr_.85fr] lg:gap-20">
+      <div className="mt-10 grid gap-10 lg:grid-cols-[1.15fr_.85fr] lg:gap-16">
         <dl>
           {CHART_LINES.map((r, i) => (
             <Reveal key={r.title} delay={i * 90}>
-              <div className="rule-row flex gap-6 py-8">
+              <div className="rule-row flex gap-6 py-6">
                 <span
                   className={`mt-3 h-0 w-10 shrink-0 ${
                     r.dashed ? "border-t-2 border-dashed" : "border-t-[3px]"

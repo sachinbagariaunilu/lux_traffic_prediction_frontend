@@ -11,9 +11,9 @@
 
    Measured, not estimated (CIEDE2000 + Machado severity 1.0):
 
-     predicted  #1f6ac4   5.36:1 on white,  4.87:1 on grey
-     actual     #d9541f   4.01:1 on white,  3.64:1 on grey
-     baseline   #8b887e   3.55:1 on white,  3.22:1 on grey   (dashed, context)
+     predicted  #1f6ac4   5.36:1 on white,  4.87:1 on the band
+     actual     #d9541f   4.01:1 on white,  3.64:1 on the band
+     baseline   #8b887e   3.55:1 on white,  3.22:1 on the band  (dashed)
      worst pairwise CVD dE 21.3  -- floor is 9.0, the old palette managed 9.8
 
    The accent tile carries black type: #0a0a0a on flag cyan is 6.74:1, which is
@@ -25,11 +25,19 @@
 :root {
   color-scheme: light;
 
-  /* Ground -- neutral grey, not warm paper: it lets one saturated accent do
-     all the talking, and keeps photography and map tiles honest. */
+  /* Ground -- WHITE, not grey. The page is now paper: one ground for the whole
+     site, and the only tonal steps are the hairline that edges a block and the
+     one quiet band a section can opt into. A grey plane under white cards made
+     every card read as a sticker laid on a background; on white the cards stop
+     being objects and the page becomes the object, which is the register the
+     oversized editorial type was always asking for.
+
+     `--viz-plane` and `--viz-surface` are deliberately the SAME value. Nothing
+     downstream has to know that: a card still calls `--viz-surface`, so the day
+     either of them moves the call sites are already correct. */
   --viz-surface: #ffffff;   /* cards, chart plane, panels */
-  --viz-plane: #f4f4f4;     /* the ground everything sits on */
-  --viz-band: #ebebeb;      /* quiet alternating band */
+  --viz-plane: #ffffff;     /* the ground everything sits on */
+  --viz-band: #f4f5f6;      /* quiet alternating band -- the only step */
 
   /* Ink */
   --viz-ink: #0a0a0a;
@@ -39,8 +47,10 @@
   /* Structure */
   --viz-grid: #e4e4e4;
   --viz-axis: #c9c9c9;
-  --viz-border: rgba(10, 10, 10, 0.1);
-  --viz-hairline: rgba(10, 10, 10, 0.14);
+  /* On a white-on-white page the hairline is not decoration -- it is the only
+     edge a card has, so both steps are a shade firmer than they were. */
+  --viz-border: rgba(10, 10, 10, 0.13);
+  --viz-hairline: rgba(10, 10, 10, 0.16);
 
   /* Data marks */
   --viz-series: #1f6ac4;    /* slot 1 -- predicted */
@@ -51,11 +61,25 @@
   --status-warn: #8f5c05;
   --status-bad: #c0271f;
 
-  /* Editorial rhythm -- the whitespace scale the sections share. */
-  --bay: clamp(4.5rem, 8vw, 8.5rem);
+  /* Editorial rhythm -- the whitespace scale the sections share.
+     Tightened hard, from 8.5rem. Two sections' bays MEET, so the old value put
+     272px of nothing between the last line of one section and the marker of
+     the next -- further apart than a section's own heading was from its own
+     figure, which is what made the page read as nine unrelated screens rather
+     than one argument. This is the single knob for that gap; the `mt-*` steps
+     inside the sections were brought down with it, in proportion. */
+  --bay: clamp(2.5rem, 3.4vw, 3.75rem);
 
   /* Blocks are square; only controls round, and only a little. */
   --r-control: 8px;
+
+  /* The engineering grid, and the accent that carries INK -- both have to flip
+     with the ground. Flag cyan is 2.3:1 on white, so on paper the accent that
+     text uses is the darkened step; on the black plate the flag hue itself.
+     Declaring them here and again in `.inverted` means no component has to
+     know which ground it landed on. */
+  --grid-ink: rgb(10 10 10 / 0.045);
+  --accent-ink: var(--lux-blue-ink);
 
   --background: var(--viz-plane);
   --foreground: var(--viz-ink);
@@ -222,6 +246,8 @@ button:disabled {
     --viz-axis: #333333;
     --viz-border: rgba(255, 255, 255, 0.12);
     --viz-hairline: rgba(255, 255, 255, 0.16);
+    --grid-ink: rgb(255 255 255 / 0.055);
+    --accent-ink: var(--lux-blue);
     background: var(--viz-plane);
     color: var(--viz-ink);
     color-scheme: dark;
@@ -425,11 +451,10 @@ button:disabled {
   }
 
   /* Sticky page header.
-     Carries `.inverted` at the call site, so `--viz-plane` here is the near
-     black of the hero plate and the bar floats over it rather than cutting a
-     light band across it. The colour is not hard-coded for that reason: the
-     rule below is the same translucency it always had, and the tokens decide
-     what it is translucent *in*. */
+     The colour is not hard-coded: the rule is a translucency, and the tokens
+     decide what it is translucent *in*. That is what let the bar follow the
+     hero from a near-black plate onto paper without touching this rule -- the
+     call site simply stopped passing `.inverted`. */
   .site-nav {
     position: sticky;
     top: 0;
@@ -1273,11 +1298,14 @@ button:disabled {
     animation-play-state: paused;
   }
 
-  /* A faint engineering grid, for the hero plate. Two gradients, no image. */
+  /* A faint engineering grid, for the hero plate. Two gradients, no image.
+     The ink comes from `--grid-ink`, which :root and .inverted each define --
+     so the same class draws dark rules on paper and light ones on the black
+     plate without the call site choosing. */
   .grid-field {
     background-image:
-      linear-gradient(to right, var(--grid-ink, rgb(255 255 255 / 0.055)) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid-ink, rgb(255 255 255 / 0.055)) 1px, transparent 1px);
+      linear-gradient(to right, var(--grid-ink) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-ink) 1px, transparent 1px);
     background-size: var(--grid-step, 64px) var(--grid-step, 64px);
   }
 
@@ -1333,9 +1361,14 @@ button:disabled {
   }
 
   /* The full stop is the reference layout's tell. It carries the accent so the
-     eye lands on the end of each clause. */
+     eye lands on the end of each clause.
+
+     `--accent-ink`, not `--lux-blue`. Now that the hero sits on paper, flag
+     cyan scores 2.3:1 against it and a full stop in it simply disappears --
+     which takes the tell with it. The token resolves to the darkened step here
+     and to the flag hue itself on any inverted section. */
   .hero-display i {
     font-style: normal;
-    color: var(--lux-blue);
+    color: var(--accent-ink);
   }
 }

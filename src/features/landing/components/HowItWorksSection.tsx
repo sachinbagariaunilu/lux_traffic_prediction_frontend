@@ -13,10 +13,10 @@ export default function HowItWorksSection() {
       eyebrow="How it works"
       heading={<>2024 taught it. 2025 tested it. 2026 is next.</>}
     >
-      <ol className="mt-14">
+      <ol className="mt-10">
         {STEPS.map((s, i) => (
           <Reveal as="li" key={s.n} delay={i * 90}>
-            <div className="rule-row grid gap-x-10 gap-y-5 py-9 md:grid-cols-[3.25rem_16rem_1fr]">
+            <div className="rule-row grid gap-x-10 gap-y-5 py-7 md:grid-cols-[3.25rem_16rem_1fr]">
               <span className="tile-accent h-[3.25rem] w-[3.25rem] text-[15px]">
                 {s.n}
               </span>

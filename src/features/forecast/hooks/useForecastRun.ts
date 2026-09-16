@@ -6,14 +6,7 @@ import { ApiError } from "@/lib/api/client";
 import { fetchForecast } from "@/lib/api/forecast";
 import { fetchLagForecast } from "@/lib/api/lag";
 import type { ActualsFile, ForecastResponse, MergedHour } from "@/lib/types";
-import {
-  buildHistory,
-  chooseEngine,
-  lastObservedDay,
-  mayUseLag,
-  normaliseLagResponse,
-  type Engine,
-} from "../lib/engine";
+import { chooseEngine, normaliseLagResponse, type Engine } from "../lib/engine";
 import type { Product } from "../lib/products";
 import { mergeHours } from "../lib/hourly";
 
@@ -78,45 +71,49 @@ export function useForecastRun({
     setLoading(true);
     setError(null);
     try {
-      // The actuals serve two purposes: the recorded line on the validation
-      // page, and -- on the forecasting page -- the history a lag model must be
-      // given, plus the last observed day that decides whether one applies.
-      //
-      // Fetched only when one of those is live. mayUseLag() rules out the whole
-      // question from the date alone, so the ~37 KB is not spent on the
-      // forecasting page's ordinary dates, which are months past any count.
-      const needActuals = product.scoreable || mayUseLag(product, date);
-      const acts: ActualsFile | null = needActuals
+      // Actuals are now fetched ONLY for the recorded line on the validation
+      // page. They used to be pulled on the forecasting page too, to build the
+      // history a lag model needed -- ~37 KB down so 55 KB could go back up to
+      // a different service. The lag service holds that history itself now, so
+      // the forecasting page makes no actuals request at all.
+      const acts: ActualsFile | null = product.scoreable
         ? await fetchActuals(poste_id)
         : null;
 
-      const wanted = chooseEngine(
-        product,
-        date,
-        lastObservedDay(acts, direction, vehicule),
-      );
+      // Decided from the DATE alone. Which series still had counts on the last
+      // recorded day is the lag service's business now, because it is the one
+      // holding them -- it answers 404 for a counter that stopped reporting
+      // early, and the fallback below catches it. Asking the browser to work
+      // that out meant downloading the data twice to find out.
+      const wanted = chooseEngine(product, date);
 
       let meta: ForecastResponse;
       let outcome: EngineOutcome = { engine: wanted, fellBack: null };
 
-      if (wanted.kind === "lag" && acts) {
-        const history = buildHistory(acts, direction, vehicule, date);
+      if (wanted.kind === "lag") {
         try {
-          const res = await fetchLagForecast(wanted.lead, {
+          const res = await fetchLagForecast(
+            wanted.lead,
             poste_id,
             direction,
             vehicule,
             date,
-            history,
-          });
+          );
           meta = normaliseLagResponse(res, date);
+          // The service assembled the history, so only IT knows which window
+          // was used. Carried back onto the engine so EngineNote can name the
+          // date instead of saying "recent counts" vaguely.
+          outcome = {
+            engine: { ...wanted, lastObserved: res.history_through?.slice(0, 10) },
+            fellBack: null,
+          };
         } catch (e) {
-          // 422 stale/short history, 503 lead not deployed, 0 service
-          // unreachable. All three are recoverable: the forecasting model needs
-          // no history and can answer this date. Anything else is a real fault
-          // and is allowed to surface.
+          // 422 date outside the snapshot, 404 this series stopped reporting
+          // early, 503 no snapshot deployed, 0 service unreachable. All four
+          // are recoverable: the long-horizon model needs no history and can
+          // answer this date. Anything else is a real fault and surfaces.
           const recoverable =
-            e instanceof ApiError && [0, 422, 503].includes(e.status);
+            e instanceof ApiError && [0, 404, 422, 503].includes(e.status);
           if (!recoverable) throw e;
           const fallback: Engine = { kind: "forecast", model: product.model };
           meta = await fetchForecast(

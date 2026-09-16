@@ -24,7 +24,7 @@ export default function SectionShell({
   eyebrow: string;
   heading?: React.ReactNode;
   lede?: React.ReactNode;
-  /** plane = the grey ground, band = the quiet step, inverted = black. */
+  /** plane = the white ground, band = the one quiet step, inverted = black. */
   tone?: "plane" | "band" | "inverted";
   children: React.ReactNode;
 }) {
@@ -43,13 +43,13 @@ export default function SectionShell({
 
         {heading && (
           <Reveal delay={80}>
-            <h2 className="display-lg mt-7 max-w-[26ch]">{heading}</h2>
+            <h2 className="display-lg mt-6 max-w-[26ch]">{heading}</h2>
           </Reveal>
         )}
 
         {lede && (
           <Reveal delay={140}>
-            <p className="lede mt-7 max-w-[56ch]">{lede}</p>
+            <p className="lede mt-6 max-w-[56ch]">{lede}</p>
           </Reveal>
         )}
 

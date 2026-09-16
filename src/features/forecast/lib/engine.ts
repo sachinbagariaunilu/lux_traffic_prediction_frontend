@@ -41,7 +41,7 @@
  * is the more accurate of the two, which is the entire reason to prefer a lag
  * model over the forecasting model in the first place.
  */
-import type { ActualsFile, ForecastResponse, LagForecastResponse } from "@/lib/types";
+import type { ForecastResponse, LagForecastResponse } from "@/lib/types";
 import type { Product } from "./products";
 
 export const LAG_LEADS = [24, 48] as const;
@@ -49,40 +49,29 @@ export type LagLead = (typeof LAG_LEADS)[number];
 
 export type Engine =
   | { kind: "forecast"; model: string }
-  | { kind: "lag"; lead: LagLead; lastObserved: string };
-
-/**
- * How much history to send.
- *
- * The models want a 744h (24h lead) or 768h (48h lead) SPAN -- 31 and 32 days.
- * The API checks the span, not the number of points, and states that gaps are
- * fine while staleness is refused. Counters do have gaps: 1410 reported 339 of
- * 365 days in 2025, and 29 of 31 in December.
- *
- * So 60 days is sent rather than 32. The surplus costs ~55 KB on a request that
- * only happens for two dates per counter, and it means an ordinary run of
- * missing days cannot push the supplied span under the requirement -- which
- * would surface as a 422 on a counter that plainly has the data.
- */
-export const HISTORY_WINDOW_DAYS = 60;
+  | {
+      kind: "lag";
+      lead: LagLead;
+      /**
+       * Last hour of real traffic behind the answer, from the service's own
+       * `history_through`. OPTIONAL because it is only known AFTER the call:
+       * the service assembles the history now, so the browser cannot know what
+       * window was used until it is told.
+       */
+      lastObserved?: string;
+    };
 
 /** The largest gap, in days, that any lag model can answer. */
 export const MAX_LAG_DAYS = 2;
 
 /**
- * Could a lag model POSSIBLY answer this date? Cheap, and answered without a
- * network request.
+ * Could a lag model answer this date at all? Answered from the date alone, with
+ * no network request.
  *
- * The real decision needs this series' last recorded hour, which costs a ~37 KB
- * actuals fetch. Paying that on every run of the forecasting page -- where most
- * dates are months past any recorded count -- would be ~37 KB spent to learn
- * "no".
- *
- * `trainedThrough` is the safe bound. The forecasting model trained through the
- * last day we hold counts for, so NO series can have recorded data after it:
- * the per-series gap is always at least this one. If even this optimistic gap
- * exceeds the longest lead, no lag model can apply and the actuals are not
- * fetched.
+ * `trainedThrough` is the last day any series holds counts for, so a date more
+ * than MAX_LAG_DAYS past it is beyond every lead and no lag model can help.
+ * Used by the hook to skip the attempt entirely rather than spend a round trip
+ * collecting a 422.
  */
 export function mayUseLag(product: Product, date: string): boolean {
   if (product.scoreable) return false;
@@ -95,41 +84,10 @@ export function daysBetween(fromISO: string, toISO: string): number {
   return Math.round((Date.parse(toISO) - Date.parse(fromISO)) / 86_400_000);
 }
 
-/**
- * The last day this series recorded anything, or null if it recorded nothing.
- *
- * Per SERIES, not per counter: a counter can hold cars and trucks in both
- * directions, and they do not always stop on the same day.
- */
-export function lastObservedDay(
-  actuals: ActualsFile | null,
-  direction: number,
-  vehicule: string,
-): string | null {
-  const days = actuals?.series?.[`${direction}-${vehicule}`];
-  if (!days) return null;
-  let last: string | null = null;
-  for (const d of Object.keys(days)) if (!last || d > last) last = d;
-  return last;
-}
-
-/**
- * Which model should answer this date for this series.
- *
- * `lastObserved` is null before the actuals file resolves and for any series
- * with no recorded counts at all. Both mean the same thing here -- no history
- * to send -- so both take the forecasting model, which needs none.
- */
-export function chooseEngine(
-  product: Product,
-  date: string,
-  lastObserved: string | null,
-): Engine {
-  // The same gate the caller uses to decide whether to fetch actuals at all.
-  // Repeated here so the two cannot disagree: without it, this function would
-  // happily route a 2025 date to a lag model when handed a lastObserved that
-  // mayUseLag() would have refused to look up -- and the pair would be correct
-  // only because every caller remembered to check both.
+/** Which model should answer this date. */
+export function chooseEngine(product: Product, date: string): Engine {
+  // The same gate the hook uses to skip the call entirely, repeated here so the
+  // two cannot disagree.
   //
   // It also carries the validation page's rule. That page's whole claim is that
   // ONE model, which never saw 2025, produced the number beside the recorded
@@ -138,39 +96,17 @@ export function chooseEngine(
   // disprove, arriving through the back door.
   if (!mayUseLag(product, date)) return { kind: "forecast", model: product.model };
 
-  if (lastObserved) {
-    const gap = daysBetween(lastObserved, date);
-    // The shorter lead first: on the day both can answer, 24h is the better
-    // model. Anything past 2 days is left to the forecasting model, because
-    // both lag models refuse it.
-    if (gap === 1) return { kind: "lag", lead: 24, lastObserved };
-    if (gap === 2) return { kind: "lag", lead: 48, lastObserved };
-  }
+  // The shorter lead first: on the day both could answer, 24h is the better
+  // model. Past two days both refuse, and mayUseLag has already excluded that.
+  //
+  // Measured from trainedThrough, which is the last day ANY series has counts
+  // for. Whether THIS series still reported then is the service's business --
+  // it holds the history and answers 404 when a counter stopped early. The
+  // browser used to download the data to decide this for itself.
+  const gap = daysBetween(product.trainedThrough, date);
+  if (gap === 1) return { kind: "lag", lead: 24 };
+  if (gap === 2) return { kind: "lag", lead: 48 };
   return { kind: "forecast", model: product.model };
-}
-
-/** Hourly points for the request body: every recorded hour in the window. */
-export function buildHistory(
-  actuals: ActualsFile,
-  direction: number,
-  vehicule: string,
-  date: string,
-  windowDays = HISTORY_WINDOW_DAYS,
-): { t: string; v: number }[] {
-  const days = actuals.series?.[`${direction}-${vehicule}`] ?? {};
-  const end = Date.parse(date);
-  const start = end - windowDays * 86_400_000;
-  const out: { t: string; v: number }[] = [];
-  for (const day of Object.keys(days).sort()) {
-    const ms = Date.parse(day);
-    // Strictly before the target day: a target hour in the history would be the
-    // answer handed to the model as an input.
-    if (ms < start || ms >= end) continue;
-    days[day].forEach((v, hour) => {
-      out.push({ t: `${day}T${String(hour).padStart(2, "0")}:00:00`, v });
-    });
-  }
-  return out;
 }
 
 /**

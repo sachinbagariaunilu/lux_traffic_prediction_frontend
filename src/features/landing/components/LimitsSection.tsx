@@ -13,10 +13,10 @@ export default function LimitsSection() {
       eyebrow="What it cannot do"
       heading={<>Worth knowing before you trust a number.</>}
     >
-      <ul className="mt-14">
+      <ul className="mt-10">
         {LIMITS.map((c, i) => (
           <Reveal as="li" key={c.title} delay={i * 90}>
-            <div className="rule-row grid gap-x-10 gap-y-4 py-9 md:grid-cols-[3.25rem_18rem_1fr]">
+            <div className="rule-row grid gap-x-10 gap-y-4 py-7 md:grid-cols-[3.25rem_18rem_1fr]">
               <span className="tile-alert h-[3.25rem] w-[3.25rem] text-[15px]">
                 {String(i + 1).padStart(2, "0")}
               </span>

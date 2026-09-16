@@ -11,10 +11,15 @@ import { CHECK_2025, FORECAST_2026 } from "@/features/forecast/lib/products";
  * Both products are named here rather than behind one "open the map" button:
  * the split is the first thing to understand, and a single entry point implies
  * a single model.
+ *
+ * It used to carry `.inverted` so it could float over the black hero plate.
+ * The hero is paper now, so the bar is too -- `.site-nav` is translucent in
+ * whatever `--viz-plane` resolves to, which is the whole reason that rule never
+ * hard-coded a colour.
  */
 export default function LandingNav() {
   return (
-    <nav className="site-nav inverted">
+    <nav className="site-nav">
       <div className="mx-auto flex max-w-[82rem] items-center gap-3 px-6 py-3.5 sm:gap-4 sm:px-10">
         <Image
           src="/world.png"

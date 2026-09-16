@@ -62,9 +62,11 @@ export default function EngineNote({ outcome }: { outcome: EngineOutcome | null 
             aria-hidden
           />
           <span style={{ color: tone }}>{engine.lead}-hour model</span>
-          <span className="text-[var(--viz-muted)]">
-            · given real counts to {longDate(engine.lastObserved)}
-          </span>
+          {engine.lastObserved && (
+            <span className="text-[var(--viz-muted)]">
+              · given real counts to {longDate(engine.lastObserved)}
+            </span>
+          )}
         </p>
       </div>
 
@@ -72,10 +74,15 @@ export default function EngineNote({ outcome }: { outcome: EngineOutcome | null 
         <div className="space-y-2.5 bg-[var(--viz-surface)] px-4 py-3.5 text-[11.5px] leading-relaxed text-[var(--viz-ink-2)] ring-1 ring-[var(--viz-border)]">
           <p>
             This date is close enough to real data to be answered by a better model. It
-            was given this counter&apos;s own recorded traffic up to{" "}
-            <strong className="font-semibold text-[var(--viz-ink)]">
-              {longDate(engine.lastObserved)}
-            </strong>
+            was given this counter&apos;s own recorded traffic
+            {engine.lastObserved ? (
+              <>
+                {" "}up to{" "}
+                <strong className="font-semibold text-[var(--viz-ink)]">
+                  {longDate(engine.lastObserved)}
+                </strong>
+              </>
+            ) : null}
             , rather than only the date — so it reads the last few days of actual
             conditions instead of an average of past years.
           </p>

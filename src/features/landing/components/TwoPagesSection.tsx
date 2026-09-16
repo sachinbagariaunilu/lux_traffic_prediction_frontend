@@ -3,6 +3,8 @@ import Link from "next/link";
 import Reveal from "@/components/ui/Reveal";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { PRODUCT_LIST, type Product } from "@/features/forecast/lib/products";
+import NetworkFigure from "./NetworkFigure";
+import ScoredDayFigure from "./ScoredDayFigure";
 import SectionShell from "./SectionShell";
 
 /**
@@ -25,6 +27,15 @@ import SectionShell from "./SectionShell";
  * Every figure and sentence comes from features/forecast/lib/products.ts, the
  * same file the pages themselves read, so the overview cannot describe a page
  * that no longer works that way.
+ *
+ * THE PICTURES ARE DRAWN, NOT LOADED. Both cards used to show a pre-rendered
+ * SVG from public/media. Neither earned its place: the scored card showed an
+ * orange curve with no legend, so nothing on it said which line was the model
+ * and which was the road -- the one thing that card exists to claim -- and the
+ * forecast card showed an abstract of a day's shape, which says nothing at all
+ * about what you get if you click it. They are now ScoredDayFigure and
+ * NetworkFigure: inline SVG built from this project's own arrays, reading the
+ * live palette tokens, still shipping no JavaScript.
  */
 function specs(p: Product): { k: string; v: string }[] {
   return [
@@ -59,7 +70,7 @@ export default function TwoPagesSection() {
         </>
       }
     >
-      <div className="mt-14 grid gap-5 lg:grid-cols-2 lg:gap-6">
+      <div className="mt-10 grid gap-5 lg:grid-cols-2 lg:gap-6">
         {PRODUCT_LIST.map((p, i) => {
           // Same tokens the badge and the charts use: the scored page takes the
           // recorded-truth colour, the forecast page the prediction colour.
@@ -74,27 +85,24 @@ export default function TwoPagesSection() {
                 style={{ "--cut-accent": tone } as React.CSSProperties}
               >
                 {/* ---- the picture ----------------------------------------
-                    Decorative here: the role label and the whole card beneath
-                    it already say what the image shows, so announcing it again
-                    would only repeat the card to a screen reader. The longer
-                    p.mediaAlt exists for call sites where the image stands
-                    alone. `unoptimized` -- the source is a vector. */}
+                    The figure owns its plate AND the strip under it, because
+                    the strip is now its legend rather than a caption: which
+                    colour is the model and which is the road has to be HTML, or
+                    it shrinks with the drawing and is unreadable once the cards
+                    stack. The strip used to restate p.dateLabel, which the spec
+                    list gives again four lines below -- the model label is kept
+                    and the date line is not missed.
+
+                    Each figure carries its own role="img" and label. Unlike the
+                    decorative renders they replace, these say something the
+                    card's prose does not, so they are announced rather than
+                    hidden. */}
                 <div className="m-px">
-                  <div className="media aspect-[16/9]">
-                    <Image
-                      src={p.media}
-                      alt=""
-                      width={1600}
-                      height={900}
-                      unoptimized
-                      aria-hidden
-                      className="h-full w-full"
-                    />
-                  </div>
-                  <div className="media-bar">
-                    <span className="label-mono">{p.dateLabel}</span>
-                    <span className="label-mono">{p.modelLabel}</span>
-                  </div>
+                  {p.scoreable ? (
+                    <ScoredDayFigure note={p.modelLabel} />
+                  ) : (
+                    <NetworkFigure note={p.modelLabel} />
+                  )}
                 </div>
 
                 <div className="flex flex-1 flex-col p-7 sm:p-9">
@@ -163,7 +171,7 @@ export default function TwoPagesSection() {
       </div>
 
       <Reveal delay={200}>
-        <p className="mt-8 max-w-[64ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
+        <p className="mt-7 max-w-[64ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
           The counter lists differ by three: 607 Marnach, 1414 France Frontière and
           1444 Schifflange only started reporting during 2025, so the 2024-only model
           has no history for them and refuses to guess — a counter&rsquo;s traffic

@@ -8,30 +8,31 @@ import SealCTA from "./SealCTA";
 /**
  * The hero: the claim on the left, the dataset drawing itself on the right.
  *
+ * ON PAPER, NOT ON A BLACK PLATE. The hero used to carry `.inverted`, which
+ * re-pointed every token to the near-black set. It looked severe and it cost
+ * more than it bought:
+ *
+ *   - The map had to borrow flag cyan to survive the dark ground, so the first
+ *     picture on the page used a hue the charts are forbidden to use -- and the
+ *     reader met the prediction colour twice, in two different colours.
+ *   - The page then opened black, went white for eight sections and closed
+ *     black, so the two inverted blocks read as a frame around the argument
+ *     rather than as punctuation inside it. One of them had to go, and the
+ *     closing section is the one with no data in it.
+ *
+ * So the hero is the same white as everything below it, separated from the next
+ * section by a hairline rather than by a change of ground, and the constellation
+ * finally draws in the same blue the charts use.
+ *
  * The counter map is CounterConstellation -- the real 270 positions on the real
- * border, on one shared projection, drawing itself in on load. It is back in
- * the hero, and in the right-hand column, because a still picture of the
- * network could never do what it does: the border strokes itself and then 270
- * counters land one after another, which states the size of the dataset in the
- * time it takes to watch. A background image said the same thing and said it
- * silently.
+ * border, on one shared projection, drawing itself in on load. It is in the
+ * right-hand column because a still picture of the network could never do what
+ * it does: the border strokes itself and then 270 counters land one after
+ * another, which states the size of the dataset in the time it takes to watch.
  *
- * It replaced a full-bleed wallpaper render of the same data. Two pictures of
- * one network on one screen is one too many, so the wallpaper is gone and the
- * plate is now just the near-black ground and the engineering grid -- which
- * also means the headline sits on a flat field and its contrast no longer
- * depends on what the picture happens to be doing behind it.
- *
- * The constellation's blue is re-pointed to the flag cyan for this section
- * only. `--viz-series` is #1f6ac4, chosen and measured against a white chart
- * plane; on a near-black plate it is one of the darkest things on screen. The
- * token is overridden on the wrapper rather than in the component, so the
- * charts -- where that value was validated -- keep it unchanged.
- *
- * There is no figures strip under the claim any more. It listed 17.7M readings,
- * 273 counters, 1,070 series and ±13.0 -- and three of those four are the
- * figures EvidenceSection states, larger and with the note that explains each.
- * Saying them twice bought nothing and cost the map the height it needed.
+ * There is no figures strip under the claim. It listed 17.7M readings, 273
+ * counters, 1,070 series and ±13.0 -- and three of those four are the figures
+ * EvidenceSection states, larger and with the note that explains each.
  *
  * Server Component: the draw-in is CSS, the seal spins in CSS.
  */
@@ -45,19 +46,21 @@ const INDEX = [
 
 export default function HeroSection() {
   return (
-    <section className="inverted relative isolate flex min-h-[calc(100svh-3.75rem)] flex-col overflow-hidden">
+    <section className="relative isolate flex min-h-[calc(100svh-3.75rem)] flex-col overflow-hidden border-b border-[var(--viz-hairline)]">
       <div className="grid-field absolute inset-0 -z-10" aria-hidden />
-      {/* One soft pool of light behind the map, so the plate is not a flat
-          rectangle of black. Cheaper and steadier than the animated .glow, and
-          it sits off to the right where no type crosses it. */}
+      {/* One soft pool of colour behind the map, so the plate is not a flat
+          rectangle of white. On paper it has to be a fraction of the strength
+          it was on black -- at the old 0.16 the wash read as a printing fault
+          rather than as light -- and it sits off to the right where no type
+          crosses it. Cheaper and steadier than the animated .glow. */}
       <div
-        className="absolute inset-0 -z-10 bg-[radial-gradient(60%_55%_at_78%_42%,rgba(0,161,222,0.16),transparent_70%)]"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(58%_52%_at_80%_44%,rgba(0,161,222,0.10),transparent_72%)]"
         aria-hidden
       />
 
       <div className="relative mx-auto flex w-full max-w-[82rem] flex-1 flex-col px-6 sm:px-10">
         {/* ---- top rail: the mark, and the index ---------------------------- */}
-        <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-6 pt-9 sm:pt-11">
+        <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-6 pt-8 sm:pt-10">
           <Reveal>
             <p className="eyebrow-bracket">
               <b>LU®</b>
@@ -70,7 +73,9 @@ export default function HeroSection() {
             <ol className="flex flex-col gap-1.5 sm:items-end">
               {INDEX.map((s) => (
                 <li key={s.n} className="label-mono flex items-baseline gap-2.5">
-                  <span className="text-[var(--lux-blue)]">{s.n}.</span>
+                  {/* --accent-ink, not the flag hue: these digits are TEXT, and
+                      flag cyan on paper is 2.3:1. */}
+                  <span className="text-[var(--accent-ink)]">{s.n}.</span>
                   <span className="text-[var(--viz-ink-2)]">{s.label}</span>
                 </li>
               ))}
@@ -79,7 +84,7 @@ export default function HeroSection() {
         </div>
 
         {/* ---- claim left, network right ------------------------------------ */}
-        <div className="mt-auto grid items-center gap-10 pb-6 pt-8 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
+        <div className="mt-auto grid items-center gap-8 pb-10 pt-6 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
           <div>
             <Reveal delay={120}>
               <h1 className="hero-display max-w-[14ch]">
@@ -90,7 +95,7 @@ export default function HeroSection() {
             </Reveal>
 
             <Reveal delay={200}>
-              <p className="lede mt-8 max-w-[46ch]">
+              <p className="lede mt-7 max-w-[46ch]">
                 We taught a model the rhythm of a country&rsquo;s roads.{" "}
                 {FORECAST_2026.sites} counters across Luxembourg, every hour of 2024
                 and 2025. From them, two models on two pages: one predicts 2025 and can
@@ -107,7 +112,7 @@ export default function HeroSection() {
                 seal IS the primary action, and pointing it somewhere else would
                 make the hero offer three choices instead of two. */}
             <Reveal delay={260}>
-              <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-5">
+              <div className="mt-7 flex flex-wrap items-center gap-x-8 gap-y-5">
                 <Link
                   href={CHECK_2025.href}
                   className="cut cut-s pill px-6 py-3.5 text-[13px]"
@@ -123,37 +128,33 @@ export default function HeroSection() {
                   href={CHECK_2025.href}
                   ring="Check 2025 against reality"
                   label="Check the 2025 forecasts against what the road recorded"
-                  className="ml-auto hidden text-[var(--viz-ink-2)] xl:grid"
+                  className="ml-auto hidden text-[var(--viz-muted)] xl:grid"
                 />
               </div>
             </Reveal>
           </div>
 
-          {/* ---- the dataset, drawing itself -------------------------------- */}
+          {/* ---- the dataset, drawing itself --------------------------------
+              No plate around it, and no token override any more. On black the
+              map had to be re-pointed to flag cyan to be visible at all; on
+              paper it draws in --viz-series and --viz-actual, which are the
+              exact two colours every chart further down the page uses for the
+              prediction and the recorded truth. The first picture on the site
+              now teaches the palette the rest of it depends on. */}
           <Reveal delay={180}>
-            {/* No plate around it. The map is the picture, and a framed box on
-                a black ground only drew a second rectangle inside the section's
-                own edges -- the drawing already reads as an object because the
-                border strokes itself in. Only the token override stays. */}
-            <div
-              className="mx-auto w-full max-w-[20rem] lg:max-w-none"
-              style={{ "--viz-series": "var(--lux-blue)" } as React.CSSProperties}
-            >
-              {/* Width-bound, so the map fills its column and the country is
-                  drawn at a size worth looking at. Capping the HEIGHT instead --
-                  which an earlier revision did, to keep the whole hero inside
-                  one screen -- squeezed a 300x420 portrait projection into a
-                  landscape gap and left the country small and marooned. The
-                  figures strip that was competing for the same vertical space
-                  has gone (see below), which is what buys the room back. */}
+            {/* Width-bound, so the map fills its column and the country is
+                drawn at a size worth looking at. Capping the HEIGHT instead --
+                which an earlier revision did, to keep the whole hero inside one
+                screen -- squeezed a 300x420 portrait projection into a
+                landscape gap and left the country small and marooned. */}
+            <div className="mx-auto w-full max-w-[20rem] lg:max-w-none">
               <CounterConstellation className="mx-auto h-auto w-full" />
-              <p className="label-mono mt-5 text-center">
+              <p className="label-mono mt-4 text-center">
                 270 counters · true positions
               </p>
             </div>
           </Reveal>
         </div>
-
       </div>
     </section>
   );

@@ -35,11 +35,11 @@ export default function ProofSection() {
         </>
       }
     >
-      <Reveal delay={200} className="mt-12">
+      <Reveal delay={200} className="mt-9">
         <figure className="cut cut-edge cut-mark p-5 sm:p-9" style={{ "--cut-accent": "var(--viz-actual)" } as React.CSSProperties}>
           <RhythmCurve className="h-auto w-full" />
 
-          <figcaption className="mt-8 grid gap-px border-t border-[var(--viz-hairline)] pt-8 sm:grid-cols-3">
+          <figcaption className="mt-7 grid gap-px border-t border-[var(--viz-hairline)] pt-7 sm:grid-cols-3">
             {RHYTHM_TOTALS.map((r) => (
               <div key={r.key}>
                 <div className="flex items-center gap-2.5">
@@ -62,7 +62,7 @@ export default function ProofSection() {
       </Reveal>
 
       <Reveal delay={120}>
-        <p className="mt-8 max-w-[64ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
+        <p className="mt-7 max-w-[64ch] text-[12.5px] leading-relaxed text-[var(--viz-muted)]">
           Picked as the model&rsquo;s best Wednesday at this counter, out of 49. It is not
           typical — the same model ran 11% high on a March Wednesday. Check 2025 shows
           you both kinds of day.

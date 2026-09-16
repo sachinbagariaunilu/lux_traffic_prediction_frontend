@@ -6,7 +6,7 @@ import SectionShell from "./SectionShell";
 export default function SourceSection() {
   return (
     <SectionShell eyebrow="Where the data comes from">
-      <div className="mt-12 grid gap-14 lg:grid-cols-[1.2fr_1fr] lg:gap-20">
+      <div className="mt-9 grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
         <Reveal delay={80}>
           <p className="text-[clamp(1.05rem,1.6vw,1.375rem)] leading-[1.5] text-[var(--viz-ink)]">
             Every number here traces back to{" "}

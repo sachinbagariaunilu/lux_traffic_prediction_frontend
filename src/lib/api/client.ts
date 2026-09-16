@@ -59,27 +59,25 @@ export class ApiError extends Error {
 }
 
 /**
- * POST to the short-horizon service.
+ * GET from a named base, throwing ApiError so the caller can read the STATUS.
  *
- * Throws ApiError rather than Error because here the STATUS decides what the
- * caller does, and the two cases are not the same kind of problem:
+ * `getJson` above throws a plain Error, which is right for the forecast service
+ * where any failure is a failure. Here the status decides what happens next and
+ * the cases are not the same kind of problem:
  *
- *   422  the history we sent is too short or too stale for this lead. Expected,
+ *   422  the date is outside what this service's history can answer. EXPECTED,
  *        and recoverable -- the caller falls back to the long-horizon model.
- *   503  that lead is not deployed on this instance. Also recoverable, but it
- *        is a deployment fact rather than a data one.
+ *   404  no recent history for this series (it stopped reporting early).
+ *        Also recoverable, and a different reason worth telling apart.
+ *   503  no history snapshot deployed at all. A deployment fact, not a data one.
  *
- * Swallowing the status would make both indistinguishable from a real fault and
- * force the UI to pattern-match on message text.
+ * Swallowing the status would make all three indistinguishable from a real
+ * fault and force the UI to pattern-match on message text.
  */
-export async function postJson<T>(base: string, path: string, body: unknown): Promise<T> {
+export async function getJsonFrom<T>(base: string, path: string): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${base}${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    res = await fetch(`${base}${path}`);
   } catch {
     throw new ApiError(
       `Cannot reach the short-horizon API at ${base}. Is it running, and is NEXT_PUBLIC_LAG_API_BASE correct?`,

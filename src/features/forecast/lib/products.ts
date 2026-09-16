@@ -60,20 +60,14 @@ export interface Product {
    * names the distinction, so announcing the icon too would just repeat it to
    * a screen reader. Landing page only -- the app surfaces keep the plain
    * dot-and-label, where the restraint is doing real work.
+   *
+   * The card's PICTURE is not configured here any more. It used to be a
+   * `media` path into public/media; both cards now draw their own figure from
+   * this project's arrays (features/landing/components/ScoredDayFigure and
+   * NetworkFigure), chosen off `scoreable` -- which is the field that already
+   * decides everything else about how a card differs.
    */
   icon: string;
-
-  /**
-   * The card image, from public/media. Generated from this project's own data
-   * (see the generator note in that folder's files) rather than bought in, so
-   * the picture on the card is a picture of the thing the card describes.
-   *
-   * DECORATIVE where the caption beside it already says what it shows, which is
-   * every current call site -- hence `mediaAlt` is the longer description used
-   * only when the image is the sole carrier of the point.
-   */
-  media: string;
-  mediaAlt: string;
 
   /** How the model describes itself, wherever it is named. */
   modelLabel: string;
@@ -173,11 +167,6 @@ export const PRODUCTS: Record<ProductId, Product> = {
     dateline: "Model: 2024 only · Dates: 2025 · Scored against recorded counts",
     // A target: this page is the one that can be marked against reality.
     icon: "/icons/target.webp",
-    // The scored day itself: one real 24 hours with the prediction laid over
-    // the recorded count. This page's whole proposition, as a picture.
-    media: "/media/rhythm.svg",
-    mediaAlt:
-      "One day at counter A7 Grengewald: the predicted hourly curve and the recorded one, tracking each other across 24 hours.",
     modelLabel: "Validation model",
     trainedOn: "2024 only",
     trainedThrough: "2024-12-31",
@@ -222,11 +211,6 @@ export const PRODUCTS: Record<ProductId, Product> = {
     dateline: "Model: 2024 + 2025 · Dates: 2026–2028 · Forecast only",
     // A calendar: this page is about dates that have not happened yet.
     icon: "/icons/calendar.webp",
-    // The daily shape, stacked down the network: what this page returns for a
-    // date nobody can check yet -- a rhythm, not a scored line.
-    media: "/media/scan.svg",
-    mediaAlt:
-      "The shape of a day repeated down the counter network, the morning peak giving way to an evening one.",
     modelLabel: "Forecasting model",
     trainedOn: "2024 + 2025",
     trainedThrough: "2025-12-31",

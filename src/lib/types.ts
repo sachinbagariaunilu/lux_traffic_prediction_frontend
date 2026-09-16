@@ -93,7 +93,11 @@ export interface LagForecastResponse {
   /** The bundle's own description of itself, from its metadata. */
   kind: string;
   date: string;
-  /** Hours the caller sent, and the span the model required. */
+  /** "server snapshot" or "caller-supplied" -- where the counts came from. */
+  history_source: string;
+  /** Last hour of real traffic behind the answer, "YYYY-MM-DD HH:MM:SS". */
+  history_through: string;
+  /** Hours used, and the span the model required. */
   history_hours_supplied: number;
   history_hours_required: number;
   is_holiday_period: boolean;

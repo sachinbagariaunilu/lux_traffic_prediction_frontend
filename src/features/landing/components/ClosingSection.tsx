@@ -18,7 +18,7 @@ export default function ClosingSection() {
         aria-hidden
       />
       <div className="relative mx-auto max-w-[82rem] px-6 py-[var(--bay)] sm:px-10">
-        <div className="grid items-start gap-12 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16">
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-14">
           <div>
             <Reveal>
               <p className="eyebrow-bracket">
@@ -28,19 +28,19 @@ export default function ClosingSection() {
               </p>
             </Reveal>
             <Reveal delay={80}>
-              <h2 className="display-xl mt-8 max-w-[18ch]">
+              <h2 className="display-xl mt-7 max-w-[18ch]">
                 Pick a counter. Pick a day.
               </h2>
             </Reveal>
             <Reveal delay={140}>
-              <p className="lede mt-8 max-w-[48ch]">
+              <p className="lede mt-6 max-w-[48ch]">
                 Choose a counter, a date, a direction and a vehicle type. On a day in
                 2025 you also get what the road recorded, so you can see for yourself
                 how the forecast held up — hour by hour.
               </p>
             </Reveal>
             <Reveal delay={200}>
-              <div className="mt-11 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
                 <Link
                   href={CHECK_2025.href}
                   className="cut cut-s pill px-7 py-4 text-[13.5px]"

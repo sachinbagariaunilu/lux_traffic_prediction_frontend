@@ -15,7 +15,7 @@ export default function EvidenceSection() {
           divided by hairlines. The chamfer only exists if the ground shows
           through it, so the moment these blocks are the theme's shape they
           also have to stop touching. */}
-      <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {EVIDENCE.map((m, i) => (
           <Reveal key={m.label} delay={i * 70} className="h-full">
             <div
@@ -33,7 +33,7 @@ export default function EvidenceSection() {
               >
                 {m.label}
               </div>
-              <div className="display-num mt-7">
+              <div className="display-num mt-6">
                 <CountUp value={m.value} decimals={m.decimals} suffix={m.suffix} />
               </div>
               <p

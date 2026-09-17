@@ -113,12 +113,97 @@ export default function ForecastPanel({
   // panel, and a stored preference widens it after hydration.
   const wide = useSyncExternalStore(subscribeWide, readWide, () => false);
 
+  /**
+   * Focus, once, on open -- and handed back on close.
+   *
+   * Separate from the key handler below on purpose. That one depends on
+   * `onClose`, which the call site rebuilds on every render, so anything living
+   * with it re-runs whenever the page above happens to render. Focusing the
+   * panel from there meant a stray re-render could yank focus out of the date
+   * field mid-edit.
+   *
+   * `document.activeElement` at mount is whatever opened the panel -- a map
+   * marker, or a row in the search list. Without giving it back, dismissing the
+   * panel drops a keyboard user at the top of the document and they tab through
+   * the whole page again to reach the counter they were just looking at.
+   */
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
+    const opener = document.activeElement as HTMLElement | null;
     panelRef.current?.focus();
+    return () => opener?.focus?.();
+  }, []);
+
+  /**
+   * Escape closes; Tab stays inside.
+   *
+   * The panel already claimed `aria-modal="true"`, which is a PROMISE that the
+   * rest of the page is unreachable -- and nothing was keeping it. Tabbing off
+   * the last control walked out of the dialog and into the map behind it, still
+   * covered by the scrim, so focus went somewhere the reader could neither see
+   * nor click out of. Either the attribute goes or the trap arrives; the trap
+   * is the one worth having.
+   *
+   * Hidden controls are filtered out rather than assumed absent: the widen
+   * toggle is `display:none` below md and a disabled Run button drops out
+   * mid-request, so the first and last focusable elements are not fixed.
+   */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+
+      const panel = panelRef.current;
+      if (!panel) return;
+
+      const items = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.offsetParent !== null);
+
+      // Nothing to land on -- keep focus on the dialog rather than releasing it.
+      if (items.length === 0) {
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
+
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      const outside = !active || !panel.contains(active) || active === panel;
+
+      if (e.shiftKey && (outside || active === first)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (outside || active === last)) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  /**
+   * What just happened, for anyone who cannot see it happen.
+   *
+   * Pressing Run swaps three skeleton blocks in and a full report out, and a
+   * screen reader was told none of it -- the button went quiet and the answer
+   * arrived silently somewhere below. One polite live region says the same
+   * three things the body is already showing.
+   */
+  const status = loading
+    ? "Running the forecast"
+    : error
+      ? `The forecast failed. ${error}`
+      : hours && summary
+        ? `Forecast ready for ${date}: about ${Math.round(summary.predictedTotal)} vehicles across the day.`
+        : "";
 
   return (
     <>
@@ -176,6 +261,10 @@ export default function ForecastPanel({
         />
 
         <div className="thin-scroll flex-1  px-6 py-5">
+          <p className="sr-only" role="status" aria-live="polite">
+            {status}
+          </p>
+
           {error && (
             <ErrorNotice title="Could not forecast" message={error} size="sm" />
           )}

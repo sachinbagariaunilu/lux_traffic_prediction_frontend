@@ -24,9 +24,10 @@ import ForecastVerdict from "./ForecastVerdict";
 import HourlyTable from "./HourlyTable";
 
 /**
- * The answer, in the order it should be read: what day this is, the verdict in
- * a sentence, the four figures, the chart, then the numbers and the caveats for
- * anyone who wants them.
+ * The answer, in the order it should be read: what day this is, which model
+ * said so, the verdict in a sentence, the four figures, the chart, then the
+ * numbers and the caveats for anyone who wants them -- and only once all of
+ * that is behind you, the button that exports it.
  *
  * Each block below is one direct child of `.stagger`, which animates them in
  * sequence -- so the count and order of children here is load-bearing.
@@ -104,25 +105,6 @@ export default function ForecastReport({
           {vehicleLabel(vehicule)} ({vehicule}) · Direction {direction}
           {series ? ` — ${series.sens}` : ""}
         </p>
-        {/* Inside this block, NOT a sibling of it: every direct child of
-            `.stagger` is one step of the entrance animation, so a new child
-            would shift the sequence for a control that is not part of the
-            reading order. The line above names one series; the download covers
-            the whole direction, which is why it sits directly under it. */}
-        {series && (
-          <div className="mt-3">
-            <DownloadReportButton
-              product={product}
-              date={date}
-              weekday={dayName}
-              series={series}
-              vehicule={vehicule as VehiculeCode}
-              vehicles={vehicles}
-              hours={hours}
-              isHolidayPeriod={meta.is_holiday_period}
-            />
-          </div>
-        )}
       </div>
 
       {/* Immediately under the verdict, because the verdict is a claim about
@@ -202,6 +184,32 @@ export default function ForecastReport({
           <BaselineExplainer product={product} dayName={dayName} />
         </Disclosure>
       </div>
+
+      {/* TAKE IT AWAY -- last, because that is when you want it.
+          This used to sit directly under the date, which made an export the
+          second thing on a report nobody had read yet: a file offered before
+          there were any numbers to decide whether the file was worth having.
+          At the end it is the natural next step instead of an interruption,
+          and the headline block above goes back to being four facts about the
+          day with no control in the middle of them.
+
+          It is a sibling of the disclosures rather than inside them: every
+          direct child of `.stagger` is one step of the entrance animation, and
+          the sequence in globals.css runs to eight for this. */}
+      {series && (
+        <div className="border-t border-[var(--viz-hairline)] pt-4">
+          <DownloadReportButton
+            product={product}
+            date={date}
+            weekday={dayName}
+            series={series}
+            vehicule={vehicule as VehiculeCode}
+            vehicles={vehicles}
+            hours={hours}
+            isHolidayPeriod={meta.is_holiday_period}
+          />
+        </div>
+      )}
     </div>
   );
 }

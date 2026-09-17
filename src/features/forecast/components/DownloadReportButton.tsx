@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { DownloadIcon } from "@/components/ui/icons";
+import Spinner from "@/components/ui/Spinner";
 import { fetchActuals } from "@/lib/api/actuals";
 import type {
   ActualsFile,
@@ -124,17 +126,35 @@ export default function DownloadReportButton({
   }
 
   return (
-    <div className="flex flex-col items-start gap-1">
+    <div className="flex flex-col items-start gap-2">
+      {/* The button says what it DOES; the line under it says what you get.
+          "Download JSON" alone left the one thing worth knowing unsaid -- that
+          the file is both vehicle classes for the whole direction, not the
+          single series on screen -- so anyone who wanted lorries as well had no
+          reason to think this button already had them.
+
+          `aria-busy` rather than only a changed label: the button keeps its
+          accessible name while it works, so a screen reader announces a state
+          instead of what looks like a different control. */}
       <button
         type="button"
         onClick={download}
         disabled={busy}
-        className="pill-quiet label-mono px-4 py-2 text-[12px] disabled:opacity-55"
+        aria-busy={busy}
+        title="Download this day as a JSON file"
+        className="pill-accent label-mono px-4 py-2.5 text-[12px] disabled:opacity-55"
       >
+        {busy ? <Spinner size={13} /> : <DownloadIcon />}
         {busy ? "Preparing…" : "Download JSON"}
       </button>
+      <p className="text-[11px] leading-snug text-[var(--viz-muted)]">
+        Hour by hour for {date} — every vehicle class at this counter and
+        direction.
+      </p>
       {failed && (
-        <span className="text-[11px] text-[var(--status-warn)]">{failed}</span>
+        <p className="text-[11px] text-[var(--status-warn)]" role="alert">
+          {failed}
+        </p>
       )}
     </div>
   );

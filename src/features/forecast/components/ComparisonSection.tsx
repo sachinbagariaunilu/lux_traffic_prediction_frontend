@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import Spinner from "@/components/ui/Spinner";
+import { PencilIcon, TrashIcon } from "@/components/ui/icons";
 import DateInput from "@/components/ui/DateInput";
 import Segmented from "@/components/ui/Segmented";
 import { fetchActuals } from "@/lib/api/actuals";
@@ -179,6 +180,16 @@ export default function ComparisonSection({
       {lines.length === 0 && <ForecastStats summary={base.summary} />}
 
       <div className="bg-[var(--viz-surface)] px-4 py-4 ring-1 ring-[var(--viz-border)]">
+        {/* The chart had no name. Between four figures above it and a table
+            below it, the block a reader is meant to spend the longest on was
+            the only one that never said what it was -- the axis label "Hour of
+            day" was doing the whole job from the bottom of the frame. */}
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h4 className="label-mono text-[var(--viz-ink)]">Hour by hour</h4>
+          <span className="label-mono">
+            {lines.length ? `${all.length} days compared` : "vehicles per hour"}
+          </span>
+        </div>
         {lines.length ? (
           <ComparisonChart lines={all} />
         ) : (
@@ -196,64 +207,137 @@ export default function ComparisonSection({
             <table className="w-full text-[11px]">
               <thead className="label-mono text-left">
                 <tr className="border-b border-[var(--viz-hairline)]">
-                  <th className="py-1.5 pr-2 font-normal">Day</th>
-                  <th className="py-1.5 pr-2 text-right font-normal">Predicted</th>
-                  <th className="py-1.5 pr-2 text-right font-normal">Recorded</th>
-                  <th className="py-1.5 pr-2 text-right font-normal">Off by</th>
-                  <th className="py-1.5 pr-2 font-normal">Busiest</th>
-                  <th className="py-1.5 font-normal">Model</th>
-                  <th />
+                  {/* `w-full` on the FIRST column only. A `w-full` table with
+                      auto layout hands its slack to every column in proportion,
+                      and in the widened panel that pushed Day and Model apart
+                      while the four numeric columns stayed jammed together in
+                      the middle -- close enough that the headings read as one
+                      phrase, "OFF BY BUSIEST". Giving the slack to Day instead
+                      leaves the figures at their natural width, in one block,
+                      where they can be compared down the column. */}
+                  <th className="w-full py-1.5 pr-3 font-normal">Day</th>
+                  <th className="py-1.5 pr-3 text-right font-normal whitespace-nowrap">
+                    Predicted
+                  </th>
+                  <th className="py-1.5 pr-3 text-right font-normal whitespace-nowrap">
+                    Recorded
+                  </th>
+                  <th className="py-1.5 pr-3 text-right font-normal whitespace-nowrap">
+                    Off by
+                  </th>
+                  <th className="py-1.5 pr-3 font-normal whitespace-nowrap">Busiest</th>
+                  <th className="py-1.5 pr-3 font-normal">Model</th>
+                  {/* Not an empty `th`. A column with no header is a column a
+                      screen reader announces as nothing at all, and the two
+                      controls under it are the only destructive pair on the
+                      panel. */}
+                  <th className="w-px py-1.5 font-normal">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="tabular-nums">
+                {/* The edit form opens BELOW the table with this line's date
+                    already in it, and nothing up here used to say which of
+                    three near-identical rows it had picked up. */}
                 {all.map((l) => (
-                  <tr key={l.id} className="border-b border-[var(--viz-hairline)]/50">
-                    <td className="py-1.5 pr-2">
-                      <span className="flex items-center gap-1.5">
+                  <tr
+                    key={l.id}
+                    className={`border-b border-[var(--viz-hairline)]/50 transition ${
+                      editingId === l.id ? "bg-[var(--viz-series)]/8" : ""
+                    }`}
+                  >
+                    {/* TWO LINES, and it is the difference between a table
+                        that fits and one that does not. On one line this cell
+                        ran ~180px and pushed the whole table 74px past the
+                        narrow panel -- so the actions sat off-screen, and
+                        pressing Edit scrolled the table sideways to reach the
+                        button that had just been pressed. Stacked, the same
+                        four facts cost ~110px and nothing is cut.
+
+                        It also reads better: the date is the row's name and the
+                        rest is its qualification, which is what the second line
+                        now says. */}
+                    <td className="py-1.5 pr-3">
+                      <span className="flex items-start gap-1.5">
                         <span
-                          className="h-0.5 w-3 shrink-0 rounded-full"
+                          className="mt-[7px] h-0.5 w-3 shrink-0 rounded-full"
                           style={{ background: CMP_COLORS[l.slot] }}
                         />
-                        <span className="text-[var(--viz-ink)]">{l.date}</span>
-                        <span className="text-[var(--viz-muted)]">
-                          {l.weekday.slice(0, 3)} · dir {l.direction} · {l.vehicule}
+                        {/* Both lines nowrap. Without it the auto-layout table
+                            squeezes this column to whatever is left and breaks
+                            the date itself -- "2025-" over "03-12" -- which is
+                            three lines to say one date. Held on one line each,
+                            the column asks for ~90px and the figures give it up
+                            from their own slack. */}
+                        <span className="min-w-0">
+                          <span className="block whitespace-nowrap text-[var(--viz-ink)]">
+                            {l.date}
+                          </span>
+                          <span className="block whitespace-nowrap text-[10px] text-[var(--viz-muted)]">
+                            {l.weekday.slice(0, 3)} · dir {l.direction} · {l.vehicule}
+                          </span>
                         </span>
                       </span>
                     </td>
-                    <td className="py-1.5 pr-2 text-right">
+                    <td className="py-1.5 pr-3 text-right">
                       {formatCount(l.summary.predictedTotal)}
                     </td>
-                    <td className="py-1.5 pr-2 text-right">
+                    <td className="py-1.5 pr-3 text-right">
                       {l.summary.actualTotal === null
                         ? "—"
                         : formatCount(l.summary.actualTotal)}
                     </td>
-                    <td className="py-1.5 pr-2 text-right">
+                    <td className="py-1.5 pr-3 text-right">
                       {l.summary.dayError === null
                         ? "—"
                         : formatSignedPercent(l.summary.dayError)}
                     </td>
-                    <td className="py-1.5 pr-2 whitespace-nowrap">
-                      {formatHour(l.summary.peak.hour)}{" "}
-                      <span className="text-[var(--viz-muted)]">
+                    {/* Stacked for the same reason as Day and Model: the hour
+                        is the answer and the rate is its footnote, and side by
+                        side the two of them were the second-widest column in a
+                        table that had 14px more than it could fit. */}
+                    <td className="py-1.5 pr-3 whitespace-nowrap">
+                      <span className="block">{formatHour(l.summary.peak.hour)}</span>
+                      <span className="block text-[10px] text-[var(--viz-muted)]">
                         {formatCount(l.summary.peak.predicted)}/h
                       </span>
                     </td>
-                    <td className="py-1.5 text-[var(--viz-muted)]">
+                    {/* Allowed to WRAP, unlike every other cell. "Validation
+                        model" on one line was the widest column in the table --
+                        97px of the 492 the narrow panel has -- and it was
+                        spending them on the one value that is usually identical
+                        down the whole column. Broken over two lines it costs
+                        ~60px, and the rows are already two lines tall because of
+                        the Day cell, so the wrap is free. */}
+                    <td className="py-1.5 pr-2 text-[10px] leading-tight text-[var(--viz-muted)]">
                       {l.product.modelLabel}
                     </td>
                     {/* The base row has no actions: it IS the report, and the
                         controls above the chart already change it. */}
-                    <td className="py-1.5 text-right whitespace-nowrap">
+                    {/* ICONS, matched as a pair. This was the word "Edit" beside
+                        a bare "×" -- two different registers for two actions of
+                        equal weight, in a row of numbers where a lone × reads as
+                        a multiplication sign and "Edit" reads as data. A pencil
+                        and a bin are the two glyphs everyone already knows, at
+                        the same size, in the same box, so the pair is legible
+                        before either one is.
+
+                        `.icon-btn-sm` is 28px rather than the 36px used in the
+                        header: 36 would set the height of every table row. The
+                        cell's own padding takes the spacing back up. */}
+                    <td className="py-1 text-right whitespace-nowrap">
                       {l.id !== base.id && (
-                        <span className="inline-flex items-center gap-1">
+                        <span className="inline-flex items-center gap-0.5">
                           <button
                             type="button"
                             onClick={() => startEdit(l)}
                             aria-label={`Edit ${l.date}`}
-                            className="label-mono px-1 text-[var(--viz-muted)] transition hover:text-[var(--viz-ink)]"
+                            aria-pressed={editingId === l.id}
+                            title={`Edit ${l.date}`}
+                            className="icon-btn icon-btn-sm"
                           >
-                            Edit
+                            <PencilIcon />
                           </button>
                           <button
                             type="button"
@@ -261,10 +345,11 @@ export default function ComparisonSection({
                               setLines((p) => p.filter((x) => x.id !== l.id));
                               if (editingId === l.id) close();
                             }}
-                            aria-label={`Remove ${l.date}`}
-                            className="px-1 text-[var(--viz-muted)] transition hover:text-[var(--viz-ink)]"
+                            aria-label={`Remove ${l.date} from the chart`}
+                            title={`Remove ${l.date} from the chart`}
+                            className="icon-btn icon-btn-sm icon-btn-danger"
                           >
-                            ×
+                            <TrashIcon />
                           </button>
                         </span>
                       )}
@@ -325,7 +410,7 @@ export default function ComparisonSection({
               type="button"
               onClick={submit}
               disabled={busy || !!blocked || (full && !editingId)}
-              className="pill-quiet label-mono px-4 py-2 text-[12px] disabled:opacity-55"
+              className="pill-accent label-mono px-4 py-2.5 text-[12px] disabled:opacity-55"
             >
               {busy
                 ? editingId
@@ -349,7 +434,7 @@ export default function ComparisonSection({
           <button
             type="button"
             onClick={startAdd}
-            className="pill-quiet label-mono w-full justify-center px-4 py-2.5 text-[12px]"
+            className="pill-accent label-mono w-full justify-center px-4 py-3 text-[12px]"
           >
             + Add another day ({all.length} of {MAX_LINES})
           </button>

@@ -598,6 +598,166 @@ button:disabled {
       0 1px 3px rgb(10 10 10 / 0.08);
   }
 
+  /* --------------------------------------------------------------------------
+     The accent button -- "this is the thing to do next"
+     --------------------------------------------------------------------------
+     Between `.pill` (filled black, one per screen, spent on Run) and
+     `.pill-quiet` (a grey hairline, worn by Cancel) there was nothing. So the
+     two actions that carry the panel FORWARD -- add a day to the chart, take
+     the day away as a file -- were drawn exactly like the button that abandons
+     a form. A reader scanning for what to do next found three identical grey
+     outlines and no answer.
+
+     Tinted, not filled. A second filled black button would compete with Run,
+     which is the one control here that costs a request and the one that must
+     stay loudest. This is the flag hue at 8% behind `--accent-ink` -- the
+     DARKENED step, 7.1:1 on paper. Flag cyan itself is 2.3:1 and can carry a
+     block of colour but never text on white; that is the whole reason the two
+     tokens exist separately.
+     -------------------------------------------------------------------------- */
+  .pill-accent {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--r-control);
+    border: 1px solid color-mix(in srgb, var(--accent-ink) 38%, transparent);
+    background: color-mix(in srgb, var(--lux-blue) 8%, transparent);
+    color: var(--accent-ink);
+    font-weight: 500;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .pill-accent:hover:not(:disabled) {
+    border-color: var(--accent-ink);
+    background: color-mix(in srgb, var(--lux-blue) 16%, transparent);
+  }
+
+  /* --------------------------------------------------------------------------
+     The drawer row
+     --------------------------------------------------------------------------
+     A `Disclosure` is a full-width button that looks exactly like the panel's
+     read-only cards: same surface, same hairline, same mono label. The only
+     thing saying it opens was a grey chevron the size of a comma, so the
+     hour-by-hour numbers -- the most-asked-for thing behind any of them -- read
+     as a heading nobody had written a section for.
+
+     The chevron gets a tinted chip instead. One accent square per row, the same
+     hue as the two accent buttons, so "this responds to a press" is a single
+     visual idea across the whole panel rather than three unrelated ones.
+     -------------------------------------------------------------------------- */
+  .drawer-chevron {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--lux-blue) 12%, transparent);
+    color: var(--accent-ink);
+    transition:
+      background 0.2s ease,
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .drawer:hover .drawer-chevron {
+    background: color-mix(in srgb, var(--lux-blue) 22%, transparent);
+  }
+
+  .drawer[aria-expanded="true"] .drawer-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* --------------------------------------------------------------------------
+     The icon button
+     --------------------------------------------------------------------------
+     An icon alone is only a control if it is SHAPED like one. These were bare
+     11-18px glyphs with padding: a `x` that could have been punctuation, an
+     `Edit` that could have been a table cell. So the class fixes the hit area
+     first -- a 36px square, which is the smallest thing a thumb reliably hits --
+     and the glyph is centred in it rather than sized to it.
+
+     Two levels of loudness, and the choice is about DISCOVERABILITY, not taste:
+       .icon-btn        ghost. For an action the reader is already looking for
+                        (close). It has a known position, so it may be quiet.
+       .icon-btn-line   outlined. For an action nobody is looking for -- the
+                        maps link is the case this was written for, and it lost
+                        its written label to get out of the header's vertical
+                        space. A hairline is what is left saying "press me".
+
+     Every caller passes BOTH `aria-label` and `title`: the label is the only
+     name a screen reader gets, and the tooltip is the only name a sighted
+     reader gets. Dropping either leaves one of them guessing.
+     -------------------------------------------------------------------------- */
+  .icon-btn {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid transparent;
+    border-radius: var(--r-control);
+    color: var(--viz-muted);
+    transition:
+      color 0.18s ease,
+      background 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .icon-btn:hover:not(:disabled) {
+    color: var(--viz-ink);
+    background: color-mix(in srgb, var(--viz-ink) 6%, transparent);
+  }
+
+  .icon-btn-line {
+    border-color: var(--viz-hairline);
+  }
+
+  .icon-btn-line:hover:not(:disabled) {
+    border-color: var(--viz-ink);
+  }
+
+  /* A toggle that is currently ON reads as pressed, not merely hovered. */
+  .icon-btn[aria-pressed="true"] {
+    color: var(--viz-ink);
+    border-color: var(--viz-hairline);
+    background: color-mix(in srgb, var(--viz-ink) 6%, transparent);
+  }
+
+  /* Inside a table row, where 36px would set the row height. Still 28px, which
+     clears the 24px AAA target size; the row's own padding carries the rest. */
+  .icon-btn-sm {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  /* Destructive, and it only colours on hover. A row of permanently red bins
+     down the side of a table reads as an error state. */
+  .icon-btn-danger:hover:not(:disabled) {
+    color: var(--status-bad);
+    background: color-mix(in srgb, var(--status-bad) 8%, transparent);
+  }
+
+  /* --------------------------------------------------------------------------
+     Focus
+     --------------------------------------------------------------------------
+     There was none. Every control in the app fell back to whatever ring the
+     browser draws, which on Safari is nearly invisible against paper -- so the
+     panel could be operated by keyboard but not FOLLOWED by keyboard.
+
+     `:focus-visible`, not `:focus`: a mouse click on a button should not leave
+     a ring behind it. In the components layer on purpose, so the two controls
+     that already draw their own ring (the date fields) keep it -- their
+     `outline-none` is a utility, and utilities win here.
+     -------------------------------------------------------------------------- */
+  :focus-visible {
+    outline: 2px solid var(--viz-series);
+    outline-offset: 2px;
+  }
+
   /* ==========================================================================
      Motion
      ========================================================================== */
@@ -640,6 +800,8 @@ button:disabled {
   .stagger > *:nth-child(4) { animation-delay: 0.14s; }
   .stagger > *:nth-child(5) { animation-delay: 0.18s; }
   .stagger > *:nth-child(6) { animation-delay: 0.22s; }
+  .stagger > *:nth-child(7) { animation-delay: 0.26s; }
+  .stagger > *:nth-child(8) { animation-delay: 0.3s; }
 
   /* Scroll reveal. Transform + opacity only, so it stays on the compositor. */
   .reveal {
